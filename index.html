@@ -37,7 +37,7 @@
             <option value="easy">かんたん（苗字・ひらがなOK）</option>
             <option value="hard">むずかしい（苗字OK ＋ 就任回数）</option>
             <option value="extreme">激ムズ（漢字フルネーム ＋ 就任回数）</option>
-            <option value="oni">鬼ムズ（サドンデス！ノーヒント＋漢字フルネーム＋就任回数）</option>
+            <option value="oni">鬼ムズ（激ムズ ＋ 一問ミスで即ゲームオーバー）</option>
         </select>
 
         <div class="option-group">
@@ -210,7 +210,7 @@ function updateDesc() {
     } else if (diff === "extreme") {
         descBox.innerHTML = "・第7代（伊藤博文の4回目就任）の例：<br>「伊藤博文4」「伊藤博文④」で正解（※ひらがなや苗字のみは不可）";
     } else if (diff === "oni") {
-        descBox.innerHTML = "・鬼ムズ（サドンデス！1問間違いで即ゲームオーバー）：<br>「伊藤博文4」「伊藤博文④」で正解（※ノーヒント）";
+        descBox.innerHTML = "・鬼ムズ（サドンデス！1問間違いで即ゲームオーバー）：<br>「伊藤博文4」「伊藤博文④」で正解（※漢字フルネーム＋就任回数）";
     }
 }
 
@@ -304,12 +304,7 @@ function showQuestion() {
     }
 
     const q = questionPool[currentIndex];
-
-    if (selectedDifficulty === "oni") {
-        document.getElementById('question').innerText = `第 ??? 代の内閣総理大臣は？`;
-    } else {
-        document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
-    }
+    document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
 
     document.getElementById('answer-input').value = "";
     document.getElementById('result-message').innerText = "";
@@ -370,7 +365,7 @@ function checkAnswer() {
             userAns: rawInput
         });
 
-        // 鬼ムズ（サドンデス）の場合は即時終了処理へ
+        // 鬼ムズ（サドンデス）の場合は即時終了
         if (selectedDifficulty === "oni") {
             setTimeout(() => {
                 finishGame(true);
