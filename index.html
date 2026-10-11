@@ -1,560 +1,440 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>歴代総理大臣当てゲーム</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-      background-color: #f4f7f6;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .container {
-      background: #ffffff;
-      width: 100%;
-      max-width: 600px;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-      text-align: center;
-    }
-    h1 {
-      font-size: 24px;
-      margin-bottom: 20px;
-      color: #2c3e50;
-    }
-    .settings, .game-screen, .result-screen {
-      display: none;
-    }
-    .active {
-      display: block;
-    }
-    .option-group {
-      margin-bottom: 20px;
-      text-align: left;
-    }
-    .option-group label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-    select, input[type="text"], input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    .range-inputs {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .range-inputs input {
-      margin-bottom: 0;
-    }
-    .checkbox-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .checkbox-group label {
-      font-weight: normal;
-      cursor: pointer;
-    }
-    button {
-      background-color: #3498db;
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      font-size: 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-      width: 100%;
-      margin-bottom: 10px;
-    }
-    button:hover {
-      background-color: #2980b9;
-    }
-    button.secondary {
-      background-color: #7f8c8d;
-    }
-    button.secondary:hover {
-      background-color: #626d6d;
-    }
-    .info-bar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 15px;
-      font-weight: bold;
-      background: #eef2f5;
-      padding: 10px 15px;
-      border-radius: 6px;
-    }
-    .card {
-      background: #fafafa;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .pm-display {
-      font-size: 28px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      margin: 15px 0 5px 0;
-      color: #2c3e50;
-    }
-    .pm-subtopic {
-      font-size: 15px;
-      color: #2980b9;
-      margin-bottom: 15px;
-      font-weight: bold;
-    }
-    .hint-box {
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      color: #856404;
-      padding: 12px;
-      border-radius: 6px;
-      margin-bottom: 15px;
-      text-align: left;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .message {
-      margin-top: 10px;
-      font-weight: bold;
-      height: 24px;
-    }
-    .correct { color: #27ae60; }
-    .incorrect { color: #e74c3c; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歴代総理大臣当てゲーム</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f4f8; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; max-width: 520px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input, button, select { font-size: 16px; padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { font-weight: bold; margin-top: 15px; font-size: 18px; }
+        .hidden { display: none; }
+        .mode-desc { font-size: 13px; color: #444; margin-top: 10px; text-align: left; background: #eef2f7; padding: 12px; border-radius: 6px; line-height: 1.5; }
+        .wrong-list { margin-top: 20px; text-align: left; background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #feb2b2; max-height: 250px; overflow-y: auto; }
+        .wrong-list h3 { margin-top: 0; color: #c53030; font-size: 16px; margin-bottom: 10px; }
+        .wrong-list ul { margin: 0; padding-left: 20px; font-size: 14px; }
+        .wrong-list li { margin-bottom: 6px; color: #2d3748; line-height: 1.4; }
+        .timer-display { font-size: 20px; font-weight: bold; color: #d9534f; margin-bottom: 10px; font-family: monospace; }
+        .option-group { margin-top: 15px; text-align: left; background: #fafafa; padding: 10px 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
+    </style>
 </head>
 <body>
 
-  <div class="container">
+<div class="card">
     <h1>歴代総理大臣当てゲーム</h1>
 
-    <!-- 設定画面 -->
-    <div id="setup-screen" class="settings active">
-      <div class="option-group">
-        <label for="difficulty">難易度を選択:</label>
-        <select id="difficulty">
-          <option value="easy">かんたん（代数と歴史的トピックを表示）</option>
-          <option value="normal">むずかしい（代数のみ表示）</option>
-          <option value="hard">激ムズ（代数表示なし、就任代数の数字必須）</option>
-          <option value="sudden_death">鬼ムズ（激ムズ ＋ 1問ミスで即ゲームオーバー）</option>
+    <div id="setup-screen">
+        <p><strong>① 出題範囲（1〜103代）</strong></p>
+        <label><input type="number" id="start-num" value="1" min="1" max="103"> 代目 〜 </label>
+        <label><input type="number" id="end-num" value="103" min="1" max="103"> 代目</label>
+
+        <p style="margin-top:20px;"><strong>② 難易度を選択</strong></p>
+        <select id="difficulty" onchange="updateDesc()">
+            <option value="easy">かんたん（苗字・ひらがなOK）</option>
+            <option value="hard">むずかしい（苗字OK ＋ 就任回数）</option>
+            <option value="extreme">激ムズ（漢字フルネーム ＋ 就任回数）</option>
+            <option value="oni">鬼ムズ（激ムズ ＋ 1問ミスで即ゲームオーバー）</option>
         </select>
-      </div>
 
-      <!-- 出題範囲設定 -->
-      <div class="option-group">
-        <label>出題範囲（1代〜104代）:</label>
-        <div class="range-inputs">
-          <input type="number" id="range-start" min="1" max="104" placeholder="1">
-          <span>〜</span>
-          <input type="number" id="range-end" min="1" max="104" placeholder="104">
+        <div class="option-group">
+            <label style="cursor:pointer;">
+                <input type="checkbox" id="timer-toggle" checked> <strong>ストップウォッチ機能（計測する）</strong>
+            </label>
         </div>
-      </div>
-
-      <div class="checkbox-group">
-        <label><input type="checkbox" id="opt-stopwatch"> ストップウォッチを表示</label>
-        <label><input type="checkbox" id="opt-time-attack"> タイムアタックモード（1問10秒制限）</label>
-        <label><input type="checkbox" id="opt-hint" checked> 詳細ヒント表示（時代・主な出来事）</label>
-      </div>
-
-      <button id="start-btn">ゲームスタート</button>
-    </div>
-
-    <!-- ゲームプレイ画面 -->
-    <div id="game-screen" class="game-screen">
-      <div class="info-bar">
-        <span id="question-num">第 1 問</span>
-        <span id="timer-display">経過時間: 0秒</span>
-      </div>
-
-      <div class="card">
-        <div id="pm-info" class="pm-display">第1代 総理大臣</div>
-        <div id="pm-subtopic" class="pm-subtopic"></div>
         
-        <div id="hint-area" class="hint-box">
-          <div><strong>時代:</strong> <span id="hint-era">-</span></div>
-          <div><strong>特徴・歴史的トピック:</strong> <span id="hint-topic">-</span></div>
-          <div><strong>主な出来事:</strong> <span id="hint-event">-</span></div>
+        <div class="mode-desc" id="mode-desc-text">
+            ・第1代（伊藤博文の1回目就任）の例：<br>
+            「伊藤」「いとう」「伊藤博文」などで正解
         </div>
 
-        <input type="text" id="answer-input" placeholder="名前（例: 伊藤博文 または 伊藤博文1）" autocomplete="off">
-        <button id="submit-btn">回答する</button>
-        <div id="feedback-msg" class="message"></div>
-      </div>
+        <br>
+        <button onclick="startGame()">ゲームスタート</button>
     </div>
 
-    <!-- 結果画面 -->
-    <div id="result-screen" class="result-screen">
-      <h2 id="result-title">ゲーム終了！</h2>
-      <p id="result-score" style="margin: 20px 0; font-size: 18px;"></p>
-      <button id="retry-btn">もう一度プレイ（同じ範囲）</button>
-      <button id="change-range-btn" class="secondary">出題範囲・設定を選び直す</button>
+    <div id="game-screen" class="hidden">
+        <div id="timer-box" class="timer-display hidden">⏱ 00:00</div>
+        <h2 id="question">第?代の内閣総理大臣は？</h2>
+        <p id="sub-hint">漢字またはひらがな（フルネーム/苗字のみ可）で入力してください</p>
+        <div id="input-container">
+            <input type="text" id="answer-input" placeholder="名前を入力..." onkeydown="if(event.key==='Enter') checkAnswer()">
+            <button onclick="checkAnswer()">回答</button>
+        </div>
+        <div id="result-message" class="result"></div>
+        <p>進行状況: <span id="current-count">0</span> / <span id="total-questions">0</span> 題（正解: <span id="score">0</span>）</p>
+
+        <div id="wrong-summary" class="wrong-list hidden">
+            <h3>❌ 間違えた問題と正解</h3>
+            <ul id="wrong-ul"></ul>
+        </div>
+
+        <button id="reset-btn" onclick="resetGame()" style="background-color: #6c757d; margin-top: 15px;">範囲を選び直す</button>
     </div>
-  </div>
+</div>
 
-  <script>
-    // 歴代総理大臣データセット（第1代〜第104代）
-    const pmData = [
-      { id: 1, name: "伊藤博文1", era: "明治", topic: "初代内閣総理大臣", event: "大日本帝国憲法発布" },
-      { id: 2, name: "黒田清隆", era: "明治", topic: "薩摩藩出身・開拓使長官", event: "超然主義演説" },
-      { id: 3, name: "山縣有朋1", era: "明治", topic: "日本陸軍の父", event: "第一回衆議院議員総選挙" },
-      { id: 4, name: "松方正義1", era: "明治", topic: "松方デフレで紙幣整理", event: "地租軽減問題" },
-      { id: 5, name: "伊藤博文2", era: "明治", topic: "日清戦争時の首相", event: "下関条約締結" },
-      { id: 6, name: "松方正義2", era: "明治", topic: "金本位制を確立", event: "貨幣法制定" },
-      { id: 7, name: "伊藤博文3", era: "明治", topic: "3回目の組閣", event: "隈板内閣直前の政局" },
-      { id: 8, name: "大隈重信1", era: "明治", topic: "日本初の政党内閣を組閣", event: "隈板内閣発足" },
-      { id: 9, name: "山縣有朋2", era: "明治", topic: "軍部大臣現役武官制を創設", event: "治安警察法制定" },
-      { id: 10, name: "伊藤博文4", era: "明治", topic: "立憲政友会を自ら結成", event: "政友会総裁として組閣" },
-      { id: 11, name: "桂太郎1", era: "明治", topic: "日露戦争を指揮", event: "日英同盟締結" },
-      { id: 12, name: "西園寺公望1", era: "明治", topic: "公家出身・桂園時代の片翼", event: "ハーグ平和会議参加" },
-      { id: 13, name: "桂太郎2", era: "明治", topic: "韓国併合を断行", event: "大逆事件" },
-      { id: 14, name: "西園寺公望2", era: "明治", topic: "最後の元老", event: "2個師団増設問題で総辞職" },
-      { id: 15, name: "桂太郎3", era: "大正", topic: "憲政擁護運動により短期間で倒閣", event: "大正政変" },
-      { id: 16, name: "山本権兵衛1", era: "大正", topic: "日本海軍の父", event: "シーメンス事件で辞職" },
-      { id: 17, name: "大隈重信2", era: "大正", topic: "早稲田大学創立者", event: "対華21カ条要求" },
-      { id: 18, name: "寺内正毅", era: "大正", topic: "ビリケン宰相", event: "米騒動の責任をとり辞職" },
-      { id: 19, name: "原敬", era: "大正", topic: "平民宰相・初の本格的政党内閣", event: "東京駅で暗殺される" },
-      { id: 20, name: "高橋是清", era: "大正", topic: "ダルマ宰相・名財務相", event: "ワシントン軍縮条約" },
-      { id: 21, name: "加藤友三郎", era: "大正", event: "山東出兵撤兵", topic: "海軍提督・軍縮条約を推進" },
-      { id: 22, name: "山本権兵衛2", era: "大正", topic: "震災手形などを処理", event: "関東大震災発生直後に組閣" },
-      { id: 23, name: "清浦奎吾", era: "大正", topic: "貴族院を基盤とする特権内閣", event: "第二次護憲運動" },
-      { id: 24, name: "加藤高明", era: "大正", topic: "護憲三派内閣を率いる", event: "普通選挙法と治安維持法制定" },
-      { id: 25, name: "若槻禮次郎1", era: "昭和", topic: "ライオン宰相のあとの緊急組閣", event: "昭和金融恐慌" },
-      { id: 26, name: "田中義一", era: "昭和", topic: "陸軍大将・強硬外交を展開", event: "張作霖爆殺事件" },
-      { id: 27, name: "濱口雄幸", era: "昭和", topic: "ライオン宰相", event: "金解禁・東京駅で狙撃される" },
-      { id: 28, name: "若槻禮次郎2", era: "昭和", topic: "満州事変不拡大方針を掲げるも失敗", event: "満州事変勃発" },
-      { id: 29, name: "犬養毅", era: "昭和", topic: "話せば分かると言った政友会総裁", event: "五・一五事件で暗殺される" },
-      { id: 30, name: "斎藤実", era: "昭和", topic: "海軍大将・挙国一致内閣", event: "国際連盟脱退" },
-      { id: 31, name: "岡田啓介", era: "昭和", topic: "二・二六事件で難を逃れた首相", event: "二・二六事件" },
-      { id: 32, name: "広田弘毅", era: "昭和", topic: "文官文官唯一のA級戦犯", event: "日独防共協定調印" },
-      { id: 33, name: "林銑十郎", era: "昭和", topic: "食い逃げ解散で有名", event: "少数与党で短命に終わる" },
-      { id: 34, name: "近衛文麿1", era: "昭和", topic: "公家名門の出身・新体制運動", event: "国家総動員法制定" },
-      { id: 35, name: "平沼騏一郎", era: "昭和", topic: "欧州の情勢は複雑怪奇の名言", event: "独ソ不可侵条約で総辞職" },
-      { id: 36, name: "阿部信行", era: "昭和", topic: "陸軍中将・第二次大戦不介入を宣言", event: "第二次世界大戦勃発" },
-      { id: 37, name: "米内光政", era: "昭和", topic: "海軍リベラル派・三国同盟に反対", event: "陸軍の対立により総辞職" },
-      { id: 38, name: "近衛文麿2", era: "昭和", topic: "大政翼賛会を結成", event: "日独伊三国同盟締結" },
-      { id: 39, name: "近衛文麿3", era: "昭和", topic: "日米交渉を進めるも開戦を回避できず", event: "南部仏印進駐" },
-      { id: 40, name: "東條英機", era: "昭和", topic: "太平洋戦争を開戦した開戦時の首相", event: "太平洋戦争開戦" },
-      { id: 41, name: "小磯國昭", era: "昭和", topic: "陸軍大将・戦局悪化の中で組閣", event: "レイテ沖海戦" },
-      { id: 42, name: "鈴木貫太郎", era: "昭和", topic: "終戦を決断した海軍大将", event: "ポツダム宣言受諾（終戦）" },
-      { id: 43, name: "東久邇宮稔彦王", era: "昭和", topic: "唯一の皇族出身の首相", event: "一億総懺悔" },
-      { id: 44, name: "幣原喜重郎", era: "昭和", topic: "幣原外交で知られる外相出身", event: "日本国憲法草案の作成" },
-      { id: 45, name: "吉田茂1", era: "昭和", topic: "ワンマン宰相", event: "日本国憲法公布" },
-      { id: 46, name: "片山哲", era: "昭和", topic: "日本社会党初の首相", event: "労働省発足" },
-      { id: 47, name: "芦田均", era: "昭和", topic: "アシダ修正で有名", event: "昭和電工事件で総辞職" },
-      { id: 48, name: "吉田茂2", era: "昭和", topic: "第二次吉田内閣発足", event: "衆議院解散" },
-      { id: 49, name: "吉田茂3", era: "昭和", topic: "経済復興と警察予備隊の創設", event: "ドッジ・ライン" },
-      { id: 50, name: "吉田茂4", era: "昭和", topic: "日本の主権回復を達成", event: "サンフランシスコ平和条約調印" },
-      { id: 51, name: "吉田茂5", era: "昭和", topic: "バカヤロー解散を敢行", event: "バカヤロー解散" },
-      { id: 52, name: "鳩山一郎1", era: "昭和", topic: "保守合同を推進", event: "自由民主党結成（55年体制）" },
-      { id: 53, name: "鳩山一郎2", era: "昭和", topic: "民主党総裁として組閣", event: "第二次鳩山内閣" },
-      { id: 54, name: "鳩山一郎3", era: "昭和", topic: "ソ連との国交回復を達成", event: "日ソ共同宣言・国連加盟" },
-      { id: 55, name: "石橋湛山", era: "昭和", topic: "小日本主義を提唱したジャーナリスト", event: "病気のため短期間で辞任" },
-      { id: 56, name: "岸信介1", era: "昭和", topic: "昭和の妖怪と呼ばれた首相", event: "日米安保条約改定に着手" },
-      { id: 57, name: "岸信介2", era: "昭和", topic: "新安保条約を強行採決", event: "安保闘争・退陣" },
-      { id: 58, name: "池田勇人1", era: "昭和", topic: "「寛容と忍耐」を掲げる", event: "所得倍増計画発表" },
-      { id: 59, name: "池田勇人2", era: "昭和", topic: "高度経済成長を推進", event: "OECD加盟" },
-      { id: 60, name: "池田勇人3", era: "昭和", topic: "東京五輪を成功させる", event: "1964年東京オリンピック開催" },
-      { id: 61, name: "佐藤栄作1", era: "昭和", topic: "人事の佐藤・長期政権を樹立", event: "日韓基本条約締結" },
-      { id: 62, name: "佐藤栄作2", era: "昭和", topic: "非核三原則を表明", event: "小笠原諸島返還" },
-      { id: 63, name: "佐藤栄作3", era: "昭和", topic: "沖縄返還を達成しノーベル平和賞受賞", event: "沖縄返還協定調印" },
-      { id: 64, name: "田中角栄1", era: "昭和", topic: "今太閤・コンピュータ付きブルドーザー", event: "日中国交正常化" },
-      { id: 65, name: "田中角栄2", era: "昭和", topic: "列島改造論を展開", event: "第1次オイルショック" },
-      { id: 66, name: "三木武夫", era: "昭和", topic: "クリーン政治を標榜", event: "ロッキード事件発覚" },
-      { id: 67, name: "福田赳夫", era: "昭和", topic: "大福密約・福田ドクトリン", event: "日中平和友好条約締結" },
-      { id: 68, name: "大平正芳1", era: "昭和", topic: "田園都市構想を提唱", event: "東京サミット開催" },
-      { id: 69, name: "大平正芳2", era: "昭和", topic: "衆参同日選挙の最中に急逝", event: "ハプニング解散" },
-      { id: 70, name: "鈴木善幸", era: "昭和", topic: "「和の政治」を唱える", event: "臨調（行政改革）発足" },
-      { id: 71, name: "中曽根康弘1", era: "昭和", topic: "「戦後政治の総決算」を掲げる", event: "ロン・ヤス関係の構築" },
-      { id: 72, name: "中曽根康弘2", era: "昭和", topic: "国際国家ニッポンを提唱", event: "プラザ合意" },
-      { id: 73, name: "中曽根康弘3", era: "昭和", topic: "三公社の民営化を達成", event: "国鉄・電電・専売民営化" },
-      { id: 74, name: "竹下登", era: "昭和・平成", topic: "消費税を初めて導入", event: "消費税3%導入・リクルート事件" },
-      { id: 75, name: "宇野宗佑", era: "平成", topic: "昭和から平成への代替わり直後の首相", event: "参院選大敗で短命退陣" },
-      { id: 76, name: "海部俊樹1", era: "平成", topic: "クリーンなイメージで選出", event: "湾岸危機への対応" },
-      { id: 77, name: "海部俊樹2", era: "平成", topic: "自衛隊初の海外派遣を決定", event: "ペルシャ湾へ掃海艇派遣" },
-      { id: 78, name: "宮澤喜一", era: "平成", topic: "平成最後の自民党単独政権の首相", event: "PKO協力法成立" },
-      { id: 79, name: "細川護熙", era: "平成", topic: "38年ぶりの非自民連立内閣首相", event: "政治改革関連法成立" },
-      { id: 80, name: "羽田孜", era: "平成", topic: "省エネルックで知られる", event: "わずか64日の短命内閣" },
-      { id: 81, name: "村山富市", era: "平成", topic: "自社さ連立内閣・眉毛が特徴", event: "阪神淡路大震災・村山談話" },
-      { id: 82, name: "橋本龍太郎1", era: "平成", topic: "行革断行・行政機構の再編", event: "住専処理問題" },
-      { id: 83, name: "橋本龍太郎2", era: "平成", topic: "消費税を5%に引き上げ", event: "中央省庁再編法成立" },
-      { id: 84, name: "小渕恵三", era: "平成", topic: "「ブッチホン」で親しまれる", event: "2000年札発行・自公連立" },
-      { id: 85, name: "森喜朗1", era: "平成", topic: "IT革命を推進", event: "IT基本法制定" },
-      { id: 86, name: "森喜朗2", era: "平成", topic: "九州・沖縄サミットを主催", event: "九州・沖縄サミット" },
-      { id: 87, name: "小泉純一郎1", era: "平成", topic: "「聖域なき構造改革」を推進", event: "初の電撃訪朝・日朝首脳会談" },
-      { id: 88, name: "小泉純一郎2", era: "平成", topic: "「感動した！」の名言", event: "自衛隊イラク派遣" },
-      { id: 90, name: "安倍晋三1", era: "平成", topic: "戦後生まれ初の総理大臣", event: "防衛庁の防衛省昇格" },
-      { id: 91, name: "福田康夫", era: "平成", topic: "親子2代で総理大臣を務める", event: "消費者庁設置を決定" },
-      { id: 92, name: "麻生太郎", era: "平成", topic: "世界金融危機（リーマンショック）に対処", event: "定額給付金の支給" },
-      { id: 93, name: "鳩山由紀夫", era: "平成", topic: "民主党への本格的政権交代を達成", event: "事業仕分けの実施" },
-      { id: 94, name: "菅直人", era: "平成", topic: "市民運動家出身の首相", event: "東日本大震災・原発事故対応" },
-      { id: 95, name: "野田佳彦", era: "平成", topic: "「どじょうすくい」の演説で話題", event: "消費税増税法案の可決" },
-      { id: 96, name: "安倍晋三2", era: "平成", topic: "自民党の政権奪還・アベノミクス推進", event: "2020東京五輪誘致成功" },
-      { id: 97, name: "安倍晋三3", era: "平成", topic: "安全保障法制の整備を推進", event: "平和安全法制成立" },
-      { id: 98, name: "安倍晋三4", era: "平成・令和", topic: "憲政史上最長在任期間を記録", event: "令和への改元・消費税10%増" },
-      { id: 99, name: "菅義偉", era: "令和", topic: "「令和おじさん」・叩き上げの首相", event: "デジタル庁発足・東京五輪開催" },
-      { id: 100, name: "岸田文雄1", era: "令和", topic: "「新しい資本主義」を掲げる", event: "第100代節目の内閣総理大臣" },
-      { id: 101, name: "岸田文雄2", era: "令和", topic: "防衛力の抜本的強化方針を打ち出す", event: "G7広島サミット開催" },
-      { id: 102, name: "石破茂1", era: "令和", topic: "自民党総裁選を勝ち抜き首相就任", event: "第102代内閣総理大臣就任" },
-      { id: 103, name: "石破茂2", era: "令和", topic: "衆議院解散・総選挙を経て再指名", event: "第103代内閣総理大臣就任" },
-      { id: 104, name: "石破茂3", era: "令和", topic: "第104代内閣総理大臣", event: "現行政権の運営" }
-    ];
+<script>
+const pmMasterData = {
+    1: { name: "伊藤博文", kana: "いとうひろぶみ", times: 1, aliases: ["伊藤", "いとう"] },
+    2: { name: "黒田清隆", kana: "くろだきよたか", times: 1, aliases: ["黒田", "くろだ"] },
+    3: { name: "山縣有朋", kana: "やまがたありとも", times: 1, aliases: ["山県有朋", "山縣", "山県", "やまがた"] },
+    4: { name: "松方正義", kana: "まつかたまさよし", times: 1, aliases: ["松方", "まつかた"] },
+    5: { name: "伊藤博文", kana: "いとうひろぶみ", times: 2, aliases: ["伊藤", "いとう"] },
+    6: { name: "松方正義", kana: "まつかたまさよし", times: 2, aliases: ["松方", "まつかた"] },
+    7: { name: "伊藤博文", kana: "いとうひろぶみ", times: 3, aliases: ["伊藤", "いとう"] },
+    8: { name: "大隈重信", kana: "おおくましげのぶ", times: 1, aliases: ["大隈", "おおくま"] },
+    9: { name: "山縣有朋", kana: "やまがたありとも", times: 2, aliases: ["山県有朋", "山縣", "山県", "やまがた"] },
+    10: { name: "伊藤博文", kana: "いとうひろぶみ", times: 4, aliases: ["伊藤", "いとう"] },
+    11: { name: "桂太郎", kana: "かつらたろう", times: 1, aliases: ["桂", "かつら"] },
+    12: { name: "西園寺公望", kana: "さいおんじきんもち", times: 1, aliases: ["西園寺", "さいおんじ"] },
+    13: { name: "桂太郎", kana: "かつらたろう", times: 2, aliases: ["桂", "かつら"] },
+    14: { name: "西園寺公望", kana: "さいおんじきんもち", times: 2, aliases: ["西園寺", "さいおんじ"] },
+    15: { name: "桂太郎", kana: "かつらたろう", times: 3, aliases: ["桂", "かつら"] },
+    16: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 1, aliases: ["山本", "やまもと"] },
+    17: { name: "大隈重信", kana: "おおくましげのぶ", times: 2, aliases: ["大隈", "おおくま"] },
+    18: { name: "寺内正毅", kana: "てらうちまさたけ", times: 1, aliases: ["寺内", "てらうち"] },
+    19: { name: "原敬", kana: "はらたかし", times: 1, aliases: ["原", "はら"] },
+    20: { name: "高橋是清", kana: "たかはしこれきよ", times: 1, aliases: ["高橋", "たかはし"] },
+    21: { name: "加藤友三郎", kana: "かとうともさぶろう", times: 1, aliases: ["加藤", "かとう"] },
+    22: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 2, aliases: ["山本", "やまもと"] },
+    23: { name: "清浦奎吾", kana: "きようらけいご", times: 1, aliases: ["清浦", "きようら"] },
+    24: { name: "加藤高明", kana: "かとうたかあき", times: 1, aliases: ["加藤", "かとう"] },
+    25: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 1, aliases: ["若槻礼次郎", "若槻", "わかつき"] },
+    26: { name: "田中義一", kana: "たなかぎいち", times: 1, aliases: ["田中", "たなか"] },
+    27: { name: "濱口雄幸", kana: "はまぐちおさち", times: 1, aliases: ["浜口雄幸", "濱口", "浜口", "はまぐち"] },
+    28: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 2, aliases: ["若槻礼次郎", "若槻", "わかつき"] },
+    29: { name: "犬養毅", kana: "いぬかいつよし", times: 1, aliases: ["犬養", "いぬかい"] },
+    30: { name: "齋藤実", kana: "さいとうまこと", times: 1, aliases: ["斎藤実", "齋藤", "斎藤", "さいとう"] },
+    31: { name: "岡田啓介", kana: "おかだけいすけ", times: 1, aliases: ["岡田", "おかだ"] },
+    32: { name: "廣田弘毅", kana: "ひろたこうき", times: 1, aliases: ["広田弘毅", "廣田", "広田", "ひろた"] },
+    33: { name: "林銑十郎", kana: "はやしせんじゅうろう", times: 1, aliases: ["林", "はやし"] },
+    34: { name: "近衞文麿", kana: "このえふみまろ", times: 1, aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
+    35: { name: "平沼騏一郎", kana: "ひらぬまきいちろう", times: 1, aliases: ["平沼", "ひらぬま"] },
+    36: { name: "阿部信行", kana: "あべのぶゆき", times: 1, aliases: ["阿部", "あべ"] },
+    37: { name: "米内光政", kana: "よないみつまさ", times: 1, aliases: ["米内", "よない"] },
+    38: { name: "近衞文麿", kana: "このえふみまろ", times: 2, aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
+    39: { name: "近衞文麿", kana: "このえふみまろ", times: 3, aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
+    40: { name: "東條英機", kana: "とうじょうひでき", times: 1, aliases: ["東条英機", "東條", "東条", "とうじょう"] },
+    41: { name: "小磯國昭", kana: "こいそくにあき", times: 1, aliases: ["小磯国昭", "小磯", "こいそ"] },
+    42: { name: "鈴木貫太郎", kana: "すずきかんたろう", times: 1, aliases: ["鈴木", "すずき"] },
+    43: { name: "東久邇宮稔彦王", kana: "ひがしくにのみやなるひこおう", times: 1, aliases: ["東久邇宮", "ひがしくにのみや"] },
+    44: { name: "幣原喜重郎", kana: "しではらきじゅうろう", times: 1, aliases: ["幣原", "しではら"] },
+    45: { name: "吉田茂", kana: "よしだしげる", times: 1, aliases: ["吉田", "よしだ"] },
+    46: { name: "片山哲", kana: "かたやまてつ", times: 1, aliases: ["片山", "かたやま"] },
+    47: { name: "芦田均", kana: "あしだひとし", times: 1, aliases: ["芦田", "あしだ"] },
+    48: { name: "吉田茂", kana: "よしだしげる", times: 2, aliases: ["吉田", "よしだ"] },
+    49: { name: "吉田茂", kana: "よしだしげる", times: 3, aliases: ["吉田", "よしだ"] },
+    50: { name: "吉田茂", kana: "よしだしげる", times: 4, aliases: ["吉田", "よしだ"] },
+    51: { name: "吉田茂", kana: "よしだしげる", times: 5, aliases: ["吉田", "よしだ"] },
+    52: { name: "鳩山一郎", kana: "はとやまいちろう", times: 1, aliases: ["鳩山", "はとやま"] },
+    53: { name: "鳩山一郎", kana: "はとやまいちろう", times: 2, aliases: ["鳩山", "はとやま"] },
+    54: { name: "鳩山一郎", kana: "はとやまいちろう", times: 3, aliases: ["鳩山", "はとやま"] },
+    55: { name: "石橋湛山", kana: "いしばしたんざん", times: 1, aliases: ["石橋", "いしばし"] },
+    56: { name: "岸信介", kana: "きしのぶすけ", times: 1, aliases: ["岸", "きし"] },
+    57: { name: "岸信介", kana: "きしのぶすけ", times: 2, aliases: ["岸", "きし"] },
+    58: { name: "池田勇人", kana: "いけだはやと", times: 1, aliases: ["池田", "いけだ"] },
+    59: { name: "池田勇人", kana: "いけだはやと", times: 2, aliases: ["池田", "いけだ"] },
+    60: { name: "池田勇人", kana: "いけだはやと", times: 3, aliases: ["池田", "いけだ"] },
+    61: { name: "佐藤栄作", kana: "さとうえいさく", times: 1, aliases: ["佐藤", "さとう"] },
+    62: { name: "佐藤栄作", kana: "さとうえいさく", times: 2, aliases: ["佐藤", "さとう"] },
+    63: { name: "佐藤栄作", kana: "さとうえいさく", times: 3, aliases: ["佐藤", "さとう"] },
+    64: { name: "田中角栄", kana: "たなかかくえい", times: 1, aliases: ["田中", "たなか"] },
+    65: { name: "田中角栄", kana: "たなかかくえい", times: 2, aliases: ["田中", "たなか"] },
+    66: { name: "三木武夫", kana: "みきたけお", times: 1, aliases: ["三木", "みき"] },
+    67: { name: "福田赳夫", kana: "ふくだたけお", times: 1, aliases: ["福田", "ふくだ"] },
+    68: { name: "大平正芳", kana: "おおひらまさよし", times: 1, aliases: ["大平", "おおひら"] },
+    69: { name: "大平正芳", kana: "おおひらまさよし", times: 2, aliases: ["大平", "おおひら"] },
+    70: { name: "鈴木善幸", kana: "すずきぜんこう", times: 1, aliases: ["鈴木", "すずき"] },
+    71: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 1, aliases: ["中曽根", "なかそね"] },
+    72: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 2, aliases: ["中曽根", "なかそね"] },
+    73: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 3, aliases: ["中曽根", "なかそね"] },
+    74: { name: "竹下登", kana: "たけしたのぼる", times: 1, aliases: ["竹下", "たけした"] },
+    75: { name: "宇野宗佑", kana: "うのそうすけ", times: 1, aliases: ["宇野", "うの"] },
+    76: { name: "海部俊樹", kana: "かいふとしき", times: 1, aliases: ["海部", "かいふ"] },
+    77: { name: "海部俊樹", kana: "かいふとしき", times: 2, aliases: ["海部", "かいふ"] },
+    78: { name: "宮澤喜一", kana: "みやざわきいち", times: 1, aliases: ["宮沢喜一", "宮澤", "宮沢", "みやざわ"] },
+    79: { name: "細川護熙", kana: "ほそかわもりひろ", times: 1, aliases: ["細川", "ほそかわ"] },
+    80: { name: "羽田孜", kana: "はたつとむ", times: 1, aliases: ["羽田", "はた"] },
+    81: { name: "村山富市", kana: "むらやまとみいち", times: 1, aliases: ["村山", "むらやま"] },
+    82: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 1, aliases: ["橋本", "はしもと"] },
+    83: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 2, aliases: ["橋本", "はしもと"] },
+    84: { name: "小渕恵三", kana: "おぶちけいぞう", times: 1, aliases: ["小渕", "おぶち"] },
+    85: { name: "森喜朗", kana: "もりよしろう", times: 1, aliases: ["森", "もり"] },
+    86: { name: "森喜朗", kana: "もりよしろう", times: 2, aliases: ["森", "もり"] },
+    87: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 1, aliases: ["小泉", "こいずみ"] },
+    88: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 2, aliases: ["小泉", "こいずみ"] },
+    89: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 3, aliases: ["小泉", "こいずみ"] },
+    90: { name: "安倍晋三", kana: "あべしんぞう", times: 1, aliases: ["安倍", "あべ"] },
+    91: { name: "福田康夫", kana: "ふくだやすお", times: 1, aliases: ["福田", "ふくだ"] },
+    92: { name: "麻生太郎", kana: "あそうたろう", times: 1, aliases: ["麻生", "あそう"] },
+    93: { name: "鳩山由紀夫", kana: "はとやまゆきお", times: 1, aliases: ["鳩山", "はとやま"] },
+    94: { name: "菅直人", kana: "かんなおと", times: 1, aliases: ["菅", "かん"] },
+    95: { name: "野田佳彦", kana: "のだよしひこ", times: 1, aliases: ["野田", "のだ"] },
+    96: { name: "安倍晋三", kana: "あべしんぞう", times: 2, aliases: ["安倍", "あべ"] },
+    97: { name: "安倍晋三", kana: "あべしんぞう", times: 3, aliases: ["安倍", "あべ"] },
+    98: { name: "安倍晋三", kana: "あべしんぞう", times: 4, aliases: ["安倍", "あべ"] },
+    99: { name: "菅義偉", kana: "すがよしひで", times: 1, aliases: ["菅", "すが"] },
+    100: { name: "岸田文雄", kana: "きしだふみお", times: 1, aliases: ["岸田", "きしだ"] },
+    101: { name: "岸田文雄", kana: "きしだふみお", times: 2, aliases: ["岸田", "きしだ"] },
+    102: { name: "石破茂", kana: "いしばしげる", times: 1, aliases: ["石破", "いしば"] },
+    103: { name: "石破茂", kana: "いしばしげる", times: 2, aliases: ["石破", "いしば"] }
+};
 
-    // 出題用データ配列
-    let activePmData = [];
+let questionPool = [];
+let currentIndex = 0;
+let score = 0;
+let selectedDifficulty = "easy";
+let wrongAnswers = [];
+let timerInterval = null;
+let secondsElapsed = 0;
+let isTimerEnabled = true;
 
-    // ゲーム状態変数
-    let currentQuizIndex = 0;
-    let score = 0;
-    let timerInterval = null;
-    let totalSeconds = 0;
-    let timeAttackSeconds = 10;
-    let selectedMode = 'easy';
-    let isStopwatchOn = false;
-    let isTimeAttackOn = false;
-    let isHintOn = true;
+function normalizeNumber(str) {
+    const numMap = {
+        '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
+        '一': '1', '二': '2', '三': '3', '四': '4', '五': '5',
+        '１': '1', '２': '2', '３': '3', '４': '4', '５': '5'
+    };
+    return str.replace(/[①②③④⑤一二三四五１２３４５]/g, m => numMap[m] || m);
+}
 
-    // DOM要素
-    const setupScreen = document.getElementById('setup-screen');
-    const gameScreen = document.getElementById('game-screen');
-    const resultScreen = document.getElementById('result-screen');
-    const startBtn = document.getElementById('start-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    const retryBtn = document.getElementById('retry-btn');
-    const changeRangeBtn = document.getElementById('change-range-btn');
-    const answerInput = document.getElementById('answer-input');
-    const feedbackMsg = document.getElementById('feedback-msg');
-    const timerDisplay = document.getElementById('timer-display');
-
-    // イベントリスナー
-    startBtn.addEventListener('click', startGame);
-    submitBtn.addEventListener('click', handleAnswer);
-    retryBtn.addEventListener('click', () => startGame()); // 同じ設定で再スタート
-    changeRangeBtn.addEventListener('click', resetGame); // 設定画面に戻る
-    answerInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') handleAnswer();
-    });
-
-    // 範囲フィルター処理
-    function filterPmData() {
-      const minId = pmData[0].id;
-      const maxId = pmData[pmData.length - 1].id;
-
-      let startInput = parseInt(document.getElementById('range-start').value, 10);
-      let endInput = parseInt(document.getElementById('range-end').value, 10);
-
-      if (isNaN(startInput) || startInput < minId) startInput = minId;
-      if (isNaN(endInput) || endInput > maxId) endInput = maxId;
-
-      if (startInput > endInput) {
-        const temp = startInput;
-        startInput = endInput;
-        endInput = temp;
-      }
-
-      activePmData = pmData.filter(pm => pm.id >= startInput && pm.id <= endInput);
+function updateDesc() {
+    const diff = document.getElementById('difficulty').value;
+    const descBox = document.getElementById('mode-desc-text');
+    if (diff === "easy") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「伊藤」「いとう」「伊藤博文」などで正解";
+    } else if (diff === "hard") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「伊藤」「伊藤1」「いとう」などで正解（※1回目は「1」省略可）";
+    } else if (diff === "extreme") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「伊藤博文」「伊藤博文1」で正解（※1回目は「1」省略可）";
+    } else if (diff === "oni") {
+        descBox.innerHTML = "・鬼ムズ（サドンデス仕様）：<br>激ムズルール（漢字フルネーム ＋ 就任回数）＋ 1問ミスで即ゲームオーバー";
     }
+}
 
-    // ゲーム開始
-    function startGame() {
-      filterPmData();
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+}
 
-      if (activePmData.length === 0) {
-        alert("該当する範囲のデータがありません。");
+function startTimer() {
+    secondsElapsed = 0;
+    updateTimerDisplay();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        secondsElapsed++;
+        updateTimerDisplay();
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+}
+
+function updateTimerDisplay() {
+    const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+    const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+    document.getElementById('timer-box').innerText = `⏱ ${mins}:${secs}`;
+}
+
+function startGame() {
+    const start = parseInt(document.getElementById('start-num').value);
+    const end = parseInt(document.getElementById('end-num').value);
+    selectedDifficulty = document.getElementById('difficulty').value;
+    isTimerEnabled = document.getElementById('timer-toggle').checked;
+
+    if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > 103) {
+        alert("正しい範囲を入力してください（1〜103）");
         return;
-      }
-
-      selectedMode = document.getElementById('difficulty').value;
-      isStopwatchOn = document.getElementById('opt-stopwatch').checked;
-      isTimeAttackOn = document.getElementById('opt-time-attack').checked;
-      isHintOn = document.getElementById('opt-hint').checked;
-
-      setupScreen.classList.remove('active');
-      resultScreen.classList.remove('active');
-      gameScreen.classList.add('active');
-
-      currentQuizIndex = 0;
-      score = 0;
-      totalSeconds = 0;
-
-      document.getElementById('hint-area').style.display = isHintOn ? 'block' : 'none';
-
-      if (isStopwatchOn || isTimeAttackOn) {
-        startTimer();
-      } else {
-        timerDisplay.style.display = 'none';
-      }
-
-      loadQuestion();
     }
 
-    // 問題読み込み
-    function loadQuestion() {
-      if (currentQuizIndex >= activePmData.length) {
+    questionPool = [];
+    for (let i = start; i <= end; i++) {
+        if (pmMasterData[i]) {
+            questionPool.push({ number: i, ...pmMasterData[i] });
+        }
+    }
+
+    if (questionPool.length === 0) {
+        alert("指定された範囲のデータが見つかりません");
+        return;
+    }
+
+    shuffle(questionPool);
+
+    currentIndex = 0;
+    score = 0;
+    wrongAnswers = [];
+
+    document.getElementById('wrong-summary').classList.add('hidden');
+    document.getElementById('wrong-ul').innerHTML = "";
+    document.getElementById('input-container').style.display = "block";
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('total-questions').innerText = questionPool.length;
+
+    if (isTimerEnabled) {
+        document.getElementById('timer-box').classList.remove('hidden');
+        startTimer();
+    } else {
+        document.getElementById('timer-box').classList.add('hidden');
+    }
+
+    if (selectedDifficulty === "oni") {
+        document.getElementById('sub-hint').innerText = "【鬼ムズ】漢字フルネーム（＋就任回数）を入力してください（1問ミスで即終了）";
+    } else if (selectedDifficulty === "extreme") {
+        document.getElementById('sub-hint').innerText = "【激ムズ】漢字フルネーム（＋就任回数）を入力してください（1回目は数字なし可）";
+    } else if (selectedDifficulty === "hard") {
+        document.getElementById('sub-hint').innerText = "【むずかしい】名前（＋就任回数）を入力してください（1回目は数字なし可）";
+    } else {
+        document.getElementById('sub-hint').innerText = "【かんたん】漢字またはひらがな（フルネーム/苗字のみ可）で入力してください";
+    }
+
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentIndex >= questionPool.length) {
         endGame(true);
         return;
-      }
-
-      const current = activePmData[currentQuizIndex];
-      document.getElementById('question-num').textContent = `第 ${currentQuizIndex + 1} 問 / 全 ${activePmData.length} 問`;
-
-      const pmInfo = document.getElementById('pm-info');
-      const pmSubtopic = document.getElementById('pm-subtopic');
-
-      if (selectedMode === 'easy') {
-        pmInfo.textContent = `第${current.id}代`;
-        pmSubtopic.textContent = `【トピック】${current.topic}`;
-      } else if (selectedMode === 'normal') {
-        pmInfo.textContent = `第${current.id}代 総理大臣`;
-        pmSubtopic.textContent = '';
-      } else { // hard, sudden_death
-        pmInfo.textContent = `第${current.id}代`;
-        pmSubtopic.textContent = '';
-      }
-
-      if (isHintOn) {
-        document.getElementById('hint-era').textContent = current.era;
-        document.getElementById('hint-topic').textContent = current.topic;
-        document.getElementById('hint-event').textContent = current.event;
-      }
-
-      answerInput.value = '';
-      feedbackMsg.textContent = '';
-      answerInput.focus();
-
-      if (isTimeAttackOn) {
-        timeAttackSeconds = 10;
-        updateTimerDisplay();
-      }
     }
 
-    // 回答照合（就任1回目は数字なしでも正解扱い）
-    function checkAnswer(input, correctAnswer) {
-      const cleanInput = input.trim();
+    const q = questionPool[currentIndex];
+    document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
 
-      if (cleanInput === correctAnswer) {
-        return true;
-      }
+    document.getElementById('answer-input').value = "";
+    document.getElementById('result-message').innerText = "";
+    document.getElementById('current-count').innerText = currentIndex + 1;
+    document.getElementById('score').innerText = score;
+    document.getElementById('answer-input').focus();
+}
 
-      if (correctAnswer.endsWith('1')) {
-        const nameWithoutOne = correctAnswer.slice(0, -1);
-        if (cleanInput === nameWithoutOne) {
-          return true;
-        }
-      }
+function checkAnswer() {
+    const rawInput = document.getElementById('answer-input').value.trim();
+    const q = questionPool[currentIndex];
 
-      return false;
-    }
+    if (!rawInput) return;
 
-    // 回答処理
-    function handleAnswer() {
-      const userInput = answerInput.value;
-      const current = activePmData[currentQuizIndex];
+    let isCorrect = false;
 
-      if (!userInput.trim()) return;
-
-      if (checkAnswer(userInput, current.name)) {
-        score++;
-        feedbackMsg.textContent = '正解！';
-        feedbackMsg.className = 'message correct';
-        currentQuizIndex++;
-        setTimeout(loadQuestion, 800);
-      } else {
-        feedbackMsg.textContent = `不正解！ 正解は「${current.name}」`;
-        feedbackMsg.className = 'message incorrect';
-
-        if (selectedMode === 'sudden_death') {
-          setTimeout(() => endGame(false), 1200);
-          return;
+    if (selectedDifficulty === "easy") {
+        isCorrect = (rawInput === q.name || rawInput === q.kana || (q.aliases && q.aliases.includes(rawInput)));
+    } else if (selectedDifficulty === "hard") {
+        const normalizedInput = normalizeNumber(rawInput);
+        const correctPatterns = [
+            `${q.name}${q.times}`,
+            `${q.kana}${q.times}`
+        ];
+        if (q.aliases) {
+            q.aliases.forEach(alias => correctPatterns.push(`${alias}${q.times}`));
         }
 
-        currentQuizIndex++;
-        setTimeout(loadQuestion, 1200);
-      }
-    }
-
-    // タイマー管理
-    function startTimer() {
-      clearInterval(timerInterval);
-      timerDisplay.style.display = 'inline';
-
-      timerInterval = setInterval(() => {
-        totalSeconds++;
-
-        if (isTimeAttackOn) {
-          timeAttackSeconds--;
-          if (timeAttackSeconds <= 0) {
-            feedbackMsg.textContent = '時間切れ！';
-            feedbackMsg.className = 'message incorrect';
-            
-            if (selectedMode === 'sudden_death') {
-              clearInterval(timerInterval);
-              setTimeout(() => endGame(false), 1000);
-              return;
+        if (q.times === 1) {
+            correctPatterns.push(q.name, q.kana);
+            if (q.aliases) {
+                q.aliases.forEach(alias => correctPatterns.push(alias));
             }
-
-            currentQuizIndex++;
-            setTimeout(loadQuestion, 1000);
-          }
         }
 
-        updateTimerDisplay();
-      }, 1000);
+        isCorrect = correctPatterns.includes(normalizedInput);
+    } else if (selectedDifficulty === "extreme" || selectedDifficulty === "oni") {
+        const normalizedInput = normalizeNumber(rawInput);
+        let allowedNames = [q.name];
+        if (q.aliases) {
+            q.aliases.forEach(a => {
+                if (!/^[ぁ-ん]+$/.test(a) && a.length > 2) {
+                    allowedNames.push(a);
+                }
+            });
+        }
+        const extremeCorrectPatterns = allowedNames.map(n => `${n}${q.times}`);
+
+        if (q.times === 1) {
+            allowedNames.forEach(n => extremeCorrectPatterns.push(n));
+        }
+
+        isCorrect = extremeCorrectPatterns.includes(normalizedInput);
     }
 
-    function updateTimerDisplay() {
-      if (isTimeAttackOn) {
-        timerDisplay.textContent = `残り時間: ${timeAttackSeconds}秒`;
-      } else if (isStopwatchOn) {
-        timerDisplay.textContent = `経過時間: ${totalSeconds}秒`;
-      }
+    if (isCorrect) {
+        score++;
+        document.getElementById('result-message').style.color = "#28a745";
+        document.getElementById('result-message').innerText = "⭕ 正解！";
+        currentIndex++;
+        setTimeout(showQuestion, 1200);
+    } else {
+        document.getElementById('result-message').style.color = "#dc3545";
+        let ansDisp = q.name;
+        if (selectedDifficulty !== "easy") {
+            ansDisp = q.times === 1 ? `${q.name}（または${q.name}1）` : `${q.name}${q.times}`;
+        }
+        document.getElementById('result-message').innerText = `❌ 不正解... (正解: ${ansDisp})`;
+        wrongAnswers.push({
+            number: q.number,
+            name: q.name,
+            kana: q.kana,
+            times: q.times,
+            userAns: rawInput
+        });
+
+        // 鬼ムズ（サドンデス）は1問ミスで即ゲームオーバー
+        if (selectedDifficulty === "oni") {
+            setTimeout(() => endGame(false), 1500);
+        } else {
+            currentIndex++;
+            setTimeout(showQuestion, 1200);
+        }
+    }
+}
+
+function endGame(isClear) {
+    stopTimer();
+    document.getElementById('input-container').style.display = "none";
+    document.getElementById('sub-hint').innerText = "";
+
+    if (isClear) {
+        document.getElementById('question').innerText = "全問終了！お疲れ様でした！";
+    } else {
+        document.getElementById('question').innerText = "💀 ゲームオーバー！（サドンデス）";
     }
 
-    // ゲーム終了
-    function endGame(isCompleted) {
-      clearInterval(timerInterval);
-      gameScreen.classList.remove('active');
-      resultScreen.classList.add('active');
-
-      const title = document.getElementById('result-title');
-      const scoreDisplay = document.getElementById('result-score');
-
-      if (!isCompleted && selectedMode === 'sudden_death') {
-        title.textContent = 'ゲームオーバー（サドンデス）';
-      } else {
-        title.textContent = 'クリア！お疲れ様でした！';
-      }
-
-      let timeText = isStopwatchOn ? `<br>クリアタイム: ${totalSeconds}秒` : '';
-      scoreDisplay.innerHTML = `正解数: ${score} / ${currentQuizIndex} 問${timeText}`;
+    let resultText = `最終結果: ${questionPool.length}問中 ${score}問正解！`;
+    if (isTimerEnabled) {
+        const mins = Math.floor(secondsElapsed / 60);
+        const secs = secondsElapsed % 60;
+        resultText += `\n⏱ クリアタイム: ${mins}分${secs}秒`;
     }
+    document.getElementById('result-message').innerText = resultText;
 
-    // 設定画面へリセット
-    function resetGame() {
-      resultScreen.classList.remove('active');
-      setupScreen.classList.add('active');
+    if (wrongAnswers.length > 0) {
+        document.getElementById('wrong-summary').classList.remove('hidden');
+        const ul = document.getElementById('wrong-ul');
+        ul.innerHTML = "";
+        
+        wrongAnswers.sort((a, b) => a.number - b.number);
+        
+        wrongAnswers.forEach(item => {
+            const li = document.createElement('li');
+            let answerText = `${item.name}（${item.kana}）`;
+            if (selectedDifficulty === "hard" || selectedDifficulty === "extreme" || selectedDifficulty === "oni") {
+                answerText = item.times === 1 ? `${item.name}（または ${item.name}1）` : `${item.name}${item.times}`;
+            }
+            li.innerHTML = `<strong>第${item.number}代:</strong> 正解「${answerText}」 <span style="color:#718096; font-size:12px;">(あなたの入力: ${item.userAns})</span>`;
+            ul.appendChild(li);
+        });
+    } else if (isClear) {
+        document.getElementById('result-message').innerText += "\n🎉 全問正解です！素晴らしい！";
     }
-  </script>
+}
+
+function resetGame() {
+    stopTimer();
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.remove('hidden');
+}
+</script>
 </body>
 </html>
