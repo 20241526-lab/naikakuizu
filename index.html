@@ -19,7 +19,29 @@
         .wrong-list li { margin-bottom: 6px; color: #2d3748; line-height: 1.4; }
         .timer-display { font-size: 20px; font-weight: bold; color: #d9534f; margin-bottom: 10px; font-family: monospace; }
         .option-group { margin-top: 15px; text-align: left; background: #fafafa; padding: 10px 15px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; }
-        .hint-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin: 10px 0; font-weight: bold; line-height: 1.4; }
+        
+        /* ヒント表示エリアのスタイル */
+        .hint-container { margin: 10px 0; }
+        .hint-btn { background-color: #ffc107; color: #212529; font-size: 14px; padding: 6px 14px; border-radius: 20px; font-weight: bold; }
+        .hint-btn:hover { background-color: #e0a800; }
+        .hint-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-top: 8px; font-weight: bold; line-height: 1.4; }
+        
+        /* タイムアタックゲージ用のスタイル */
+        .gauge-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            height: 16px;
+            overflow: hidden;
+            margin: 10px 0;
+            border: 1px solid #cbd5e1;
+        }
+        .gauge-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #28a745;
+            transition: width 0.1s linear, background-color 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -71,10 +93,20 @@
 
     <div id="game-screen" class="hidden">
         <div id="timer-box" class="timer-display hidden">⏱ 00:00</div>
-        <div id="countdown-box" class="timer-display hidden" style="color: #e67e22;">⏳ 残り: 10秒</div>
         
+        <!-- タイムアタックゲージ -->
+        <div id="gauge-box" class="gauge-container hidden">
+            <div id="gauge-bar" class="gauge-bar"></div>
+        </div>
+
         <h2 id="question">第?代の内閣総理大臣は？</h2>
-        <div id="hint-area" class="hint-box hidden">💡 ヒント: <span id="hint-event">-</span></div>
+        
+        <!-- 開閉式ヒントエリア -->
+        <div id="hint-container" class="hint-container hidden">
+            <button class="hint-btn" onclick="toggleHint()">💡 ヒントを見る</button>
+            <div id="hint-box" class="hint-box hidden"><span id="hint-event">-</span></div>
+        </div>
+
         <p id="sub-hint">漢字またはひらがな（フルネーム/苗字のみ可）で入力してください</p>
         
         <div id="input-container">
@@ -147,7 +179,7 @@ const pmMasterData = {
     50: { name: "吉田茂", kana: "よしだしげる", times: 4, event: "サンフランシスコ平和条約・日米安保条約に調印", aliases: ["吉田", "よしだ"] },
     51: { name: "吉田茂", kana: "よしだしげる", times: 5, event: "「バカヤロー解散」を敢行した長期政権", aliases: ["吉田", "よしだ"] },
     52: { name: "鳩山一郎", kana: "はとやまいちろう", times: 1, event: "保守合同を主導し自由民主党（自民党）を結成", aliases: ["鳩山", "はとやま"] },
-    53: { name: "鳩山一郎", kana: "はとやまいちろう", times: 2, event: "第2次組閣・自民党初代総裁として政権を運営", aliases: ["鳩山", "はtoやま"] },
+    53: { name: "鳩山一郎", kana: "はとやまいちろう", times: 2, event: "第2次組閣・自民党初代総裁として政権を運営", aliases: ["鳩山", "はとやま"] },
     54: { name: "鳩山一郎", kana: "はとやまいちろう", times: 3, event: "日ソ共同宣言に調印し国際連盟加盟を達成", aliases: ["鳩山", "はとやま"] },
     55: { name: "石橋湛山", kana: "いしばしたんざん", times: 1, event: "小日本主義を提唱したジャーナリスト・病気で短命辞任", aliases: ["石橋", "いしばし"] },
     56: { name: "岸信介", kana: "きしのぶすけ", times: 1, event: "「昭和の妖怪」・日米安保条約の改定に着手", aliases: ["岸", "きし"] },
@@ -209,10 +241,10 @@ let timerInterval = null;
 let secondsElapsed = 0;
 let isTimerEnabled = true;
 
-// タイムアタック用
+// タイムアタックゲージ用
 let timeAttackLimit = 0;
 let countdownInterval = null;
-let currentCountdown = 0;
+let startTime = 0;
 
 // ヒント機能用
 let isHintEnabled = true;
@@ -268,25 +300,39 @@ function updateTimerDisplay() {
     document.getElementById('timer-box').innerText = `⏱ ${mins}:${secs}`;
 }
 
-function startCountdown() {
+// ゲージアニメーション付きタイムアタック処理
+function startGaugeCountdown() {
     if (timeAttackLimit <= 0) return;
     
-    currentCountdown = timeAttackLimit;
-    const cdBox = document.getElementById('countdown-box');
-    cdBox.classList.remove('hidden');
-    cdBox.innerText = `⏳ 残り: ${currentCountdown}秒`;
+    const gaugeBox = document.getElementById('gauge-box');
+    const gaugeBar = document.getElementById('gauge-bar');
+    gaugeBox.classList.remove('hidden');
+    
+    gaugeBar.style.width = '100%';
+    gaugeBar.style.backgroundColor = '#28a745';
+    
+    startTime = Date.now();
+    const durationMs = timeAttackLimit * 1000;
     
     if (countdownInterval) clearInterval(countdownInterval);
     
     countdownInterval = setInterval(() => {
-        currentCountdown--;
-        cdBox.innerText = `⏳ 残り: ${currentCountdown}秒`;
+        const elapsed = Date.now() - startTime;
+        const remainingRatio = Math.max(0, (durationMs - elapsed) / durationMs);
         
-        if (currentCountdown <= 0) {
+        gaugeBar.style.width = `${remainingRatio * 100}%`;
+        
+        if (remainingRatio <= 0.2) {
+            gaugeBar.style.backgroundColor = '#dc3545';
+        } else if (remainingRatio <= 0.5) {
+            gaugeBar.style.backgroundColor = '#ffc107';
+        }
+
+        if (remainingRatio <= 0) {
             clearInterval(countdownInterval);
             handleTimeUp();
         }
-    }, 1000);
+    }, 100);
 }
 
 function handleTimeUp() {
@@ -313,6 +359,11 @@ function handleTimeUp() {
         currentIndex++;
         setTimeout(showQuestion, 1200);
     }
+}
+
+function toggleHint() {
+    const hintBox = document.getElementById('hint-box');
+    hintBox.classList.toggle('hidden');
 }
 
 function startGame() {
@@ -360,12 +411,6 @@ function startGame() {
         document.getElementById('timer-box').classList.add('hidden');
     }
 
-    if (timeAttackLimit > 0) {
-        document.getElementById('countdown-box').classList.remove('hidden');
-    } else {
-        document.getElementById('countdown-box').classList.add('hidden');
-    }
-
     if (selectedDifficulty === "oni") {
         document.getElementById('sub-hint').innerText = "【鬼ムズ】漢字フルネーム（＋就任回数）を入力してください（1問ミスで即終了）";
     } else if (selectedDifficulty === "extreme") {
@@ -388,13 +433,16 @@ function showQuestion() {
     const q = questionPool[currentIndex];
     document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
 
-    // ヒントの表示制御（歴史的背景を表示）
-    const hintArea = document.getElementById('hint-area');
+    // ヒントボタン・内容の設定とリセット（次問題に進むと閉じた状態に戻る）
+    const hintContainer = document.getElementById('hint-container');
+    const hintBox = document.getElementById('hint-box');
+    
     if (isHintEnabled) {
-        hintArea.classList.remove('hidden');
+        hintContainer.classList.remove('hidden');
+        hintBox.classList.add('hidden'); // 開閉状態を閉じる
         document.getElementById('hint-event').innerText = q.event;
     } else {
-        hintArea.classList.add('hidden');
+        hintContainer.classList.add('hidden');
     }
 
     document.getElementById('answer-input').value = "";
@@ -403,9 +451,11 @@ function showQuestion() {
     document.getElementById('score').innerText = score;
     document.getElementById('answer-input').focus();
 
-    // タイムアタック開始
+    // タイムアタックゲージ開始
     if (timeAttackLimit > 0) {
-        startCountdown();
+        startGaugeCountdown();
+    } else {
+        document.getElementById('gauge-box').classList.add('hidden');
     }
 }
 
@@ -497,8 +547,8 @@ function endGame(isClear) {
     stopTimer();
     document.getElementById('input-container').style.display = "none";
     document.getElementById('sub-hint').innerText = "";
-    document.getElementById('hint-area').classList.add('hidden');
-    document.getElementById('countdown-box').classList.add('hidden');
+    document.getElementById('hint-container').classList.add('hidden');
+    document.getElementById('gauge-box').classList.add('hidden');
 
     if (isClear) {
         document.getElementById('question').innerText = "全問終了！お疲れ様でした！";
