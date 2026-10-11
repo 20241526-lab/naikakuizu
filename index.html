@@ -60,7 +60,7 @@
         <div id="timer-box" class="timer-display hidden">⏱ 00:00</div>
         <h2 id="question">第?代の内閣総理大臣は？</h2>
         <div id="img-wrapper" class="pm-image-container hidden">
-            <img id="pm-img" class="pm-image" src="" alt="顔写真" referrerpolicy="no-referrer">
+            <img id="pm-img" class="pm-image" src="" alt="顔写真">
         </div>
         <p id="sub-hint">漢字またはひらがな（フルネーム/苗字のみ可）で入力してください</p>
         <div id="input-container">
@@ -345,7 +345,9 @@ function showQuestion() {
 
     if (selectedDifficulty === "oni") {
         document.getElementById('question').innerText = "この人物の漢字フルネームと就任回数は？";
-        imgElement.src = q.img;
+        // 外部ブロック回避（images.weserv.nl経由で画像を表示）
+        const cleanUrl = q.img.replace("https://", "");
+        imgElement.src = "https://images.weserv.nl/?url=" + encodeURIComponent(cleanUrl);
         imgWrapper.classList.remove('hidden');
     } else {
         document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
