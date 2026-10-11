@@ -20,6 +20,15 @@
         .timer-display { font-size: 20px; font-weight: bold; color: #d9534f; margin-bottom: 10px; font-family: monospace; }
         .option-group { margin-top: 15px; text-align: left; background: #fafafa; padding: 10px 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
         .gameover-text { color: #dc3545; font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+        
+        /* タイムアタック用ゲージ */
+        .time-bar-container { width: 100%; background-color: #e0e0e0; border-radius: 5px; margin-bottom: 15px; overflow: hidden; height: 12px; }
+        .time-bar { height: 100%; background-color: #28a745; width: 100%; transition: width 0.1s linear, background-color 0.3s; }
+        
+        /* ヒント表示エリア */
+        .hint-box { background: #fffbea; border: 1px solid #ffeba2; padding: 10px; border-radius: 6px; margin: 10px 0; font-size: 14px; color: #856404; }
+        .btn-hint { background-color: #ffc107; color: #212529; font-size: 14px; padding: 6px 12px; }
+        .btn-hint:hover { background-color: #e0a800; }
     </style>
 </head>
 <body>
@@ -41,8 +50,15 @@
         </select>
 
         <div class="option-group">
-            <label style="cursor:pointer;">
-                <input type="checkbox" id="timer-toggle" checked> <strong>ストップウォッチ機能（計測する）</strong>
+            <p style="margin:0 0 8px 0;"><strong>③ オプション設定</strong></p>
+            <label style="cursor:pointer; display:block; margin-bottom:6px;">
+                <input type="checkbox" id="timer-toggle" checked> ストップウォッチ（クリア時間を計測）
+            </label>
+            <label style="cursor:pointer; display:block; margin-bottom:6px;">
+                <input type="checkbox" id="timeattack-toggle"> ⏱ タイムアタックモード（1問10秒制限）
+            </label>
+            <label style="cursor:pointer; display:block;">
+                <input type="checkbox" id="hint-toggle" checked> 💡 ヒントボタンを表示する
             </label>
         </div>
         
@@ -57,9 +73,22 @@
 
     <div id="game-screen" class="hidden">
         <div id="timer-box" class="timer-display hidden">⏱ 00:00</div>
+        
+        <!-- タイムアタック用バー -->
+        <div id="time-bar-wrapper" class="time-bar-container hidden">
+            <div id="time-bar" class="time-bar"></div>
+        </div>
+
         <h2 id="question">第?代の内閣総理大臣は？</h2>
         <p id="sub-hint">漢字またはひらがな（フルネーム/苗字のみ可）で入力してください</p>
-        <div id="input-container">
+
+        <!-- ヒント機能エリア -->
+        <div id="hint-container" class="hidden">
+            <button class="btn-hint" onclick="showHint()">💡 ヒントを見る</button>
+            <div id="hint-text" class="hint-box hidden"></div>
+        </div>
+
+        <div id="input-container" style="margin-top:15px;">
             <input type="text" id="answer-input" placeholder="名前を入力..." onkeydown="if(event.key==='Enter') checkAnswer()">
             <button onclick="checkAnswer()">回答</button>
         </div>
@@ -77,109 +106,109 @@
 
 <script>
 const pmMasterData = {
-    1: { name: "伊藤博文", kana: "いとうひろぶみ", times: 1, aliases: ["伊藤", "いとう"] },
-    2: { name: "黒田清隆", kana: "くろだきよたか", times: 1, aliases: ["黒田", "くろだ"] },
-    3: { name: "山縣有朋", kana: "やまがたありとも", times: 1, aliases: ["山県有朋", "山縣", "山県", "やまがた"] },
-    4: { name: "松方正義", kana: "まつかたまさよし", times: 1, aliases: ["松方", "まつかた"] },
-    5: { name: "伊藤博文", kana: "いとうひろぶみ", times: 2, aliases: ["伊藤", "いとう"] },
-    6: { name: "松方正義", kana: "まつかたまさよし", times: 2, aliases: ["松方", "まつかた"] },
-    7: { name: "伊藤博文", kana: "いとうひろぶみ", times: 3, aliases: ["伊藤", "いとう"] },
-    8: { name: "大隈重信", kana: "おおくましげのぶ", times: 1, aliases: ["大隈", "おおくま"] },
-    9: { name: "山縣有朋", kana: "やまがたありとも", times: 2, aliases: ["山県有朋", "山縣", "山県", "やまがた"] },
-    10: { name: "伊藤博文", kana: "いとうひろぶみ", times: 4, aliases: ["伊藤", "いとう"] },
-    11: { name: "桂太郎", kana: "かつらたろう", times: 1, aliases: ["桂", "かつら"] },
-    12: { name: "西園寺公望", kana: "さいおんじきんもち", times: 1, aliases: ["西園寺", "さいおんじ"] },
-    13: { name: "桂太郎", kana: "かつらたろう", times: 2, aliases: ["桂", "かつら"] },
-    14: { name: "西園寺公望", kana: "さいおんじきんもち", times: 2, aliases: ["西園寺", "さいおんじ"] },
-    15: { name: "桂太郎", kana: "かつらたろう", times: 3, aliases: ["桂", "かつら"] },
-    16: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 1, aliases: ["山本", "やまもと"] },
-    17: { name: "大隈重信", kana: "おおくましげのぶ", times: 2, aliases: ["大隈", "おおくま"] },
-    18: { name: "寺内正毅", kana: "てらうちまさたけ", times: 1, aliases: ["寺内", "てらうち"] },
-    19: { name: "原敬", kana: "はらたかし", times: 1, aliases: ["原", "はら"] },
-    20: { name: "高橋是清", kana: "たかはしこれきよ", times: 1, aliases: ["高橋", "たかはし"] },
-    21: { name: "加藤友三郎", kana: "かとうともさぶろう", times: 1, aliases: ["加藤", "かとう"] },
-    22: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 2, aliases: ["山本", "やまもと"] },
-    23: { name: "清浦奎吾", kana: "きようらけいご", times: 1, aliases: ["清浦", "きようら"] },
-    24: { name: "加藤高明", kana: "かとうたかあき", times: 1, aliases: ["加藤", "かとう"] },
-    25: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 1, aliases: ["若槻礼次郎", "若槻", "わかつき"] },
-    26: { name: "田中義一", kana: "たなかぎいち", times: 1, aliases: ["田中", "たなか"] },
-    27: { name: "濱口雄幸", kana: "はまぐちおさち", times: 1, aliases: ["浜口雄幸", "濱口", "浜口", "はまぐち"] },
-    28: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 2, aliases: ["若槻礼次郎", "若槻", "わかつき"] },
-    29: { name: "犬養毅", kana: "いぬかいつよし", times: 1, aliases: ["犬養", "いぬかい"] },
-    30: { name: "齋藤実", kana: "さいとうまこと", times: 1, aliases: ["斎藤実", "齋藤", "斎藤", "さいとう"] },
-    31: { name: "岡田啓介", kana: "おかだけいすけ", times: 1, aliases: ["岡田", "おかだ"] },
-    32: { name: "廣田弘毅", kana: "ひろたこうき", times: 1, aliases: ["広田弘毅", "廣田", "広田", "ひろた"] },
-    33: { name: "林銑十郎", kana: "はやしせんじゅうろう", times: 1, aliases: ["林", "はやし"] },
-    34: { name: "近衞文麿", kana: "このえふみまろ", times: 1, aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
-    35: { name: "平沼騏一郎", kana: "ひらぬまきいちろう", times: 1, aliases: ["平沼", "ひらぬま"] },
-    36: { name: "阿部信行", kana: "あべのぶゆき", times: 1, aliases: ["阿部", "あべ"] },
-    37: { name: "米内光政", kana: "よないみつまさ", times: 1, aliases: ["米内", "よない"] },
-    38: { name: "近衞文麿", kana: "このえふみまろ", times: 2, aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
-    39: { name: "近衞文麿", kana: "このえふみまろ", times: 3, aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
-    40: { name: "東條英機", kana: "とうじょうひでき", times: 1, aliases: ["東条英機", "東條", "東条", "とうじょう"] },
-    41: { name: "小磯國昭", kana: "こいそくニアき", times: 1, aliases: ["小磯国昭", "小磯", "こいそ"] },
-    42: { name: "鈴木貫太郎", kana: "すずきかんたろう", times: 1, aliases: ["鈴木", "すずき"] },
-    43: { name: "東久邇宮稔彦王", kana: "ひがしくにのみやなるひこおう", times: 1, aliases: ["東久邇宮", "ひがしくにのみや"] },
-    44: { name: "幣原喜重郎", kana: "しではらきじゅうろう", times: 1, aliases: ["幣原", "しではら"] },
-    45: { name: "吉田茂", kana: "よしだしげる", times: 1, aliases: ["吉田", "よしだ"] },
-    46: { name: "片山哲", kana: "かたやまてつ", times: 1, aliases: ["片山", "かたやま"] },
-    47: { name: "芦田均", kana: "あしだひとし", times: 1, aliases: ["芦田", "あしだ"] },
-    48: { name: "吉田茂", kana: "よしだしげる", times: 2, aliases: ["吉田", "よしだ"] },
-    49: { name: "吉田茂", kana: "よしだしげる", times: 3, aliases: ["吉田", "よしだ"] },
-    50: { name: "吉田茂", kana: "よしだしげる", times: 4, aliases: ["吉田", "よしだ"] },
-    51: { name: "吉田茂", kana: "よしだしげる", times: 5, aliases: ["吉田", "よしだ"] },
-    52: { name: "鳩山一郎", kana: "はとやまいちろう", times: 1, aliases: ["鳩山", "はとやま"] },
-    53: { name: "鳩山一郎", kana: "はとやまいちろう", times: 2, aliases: ["鳩山", "はとやま"] },
-    54: { name: "鳩山一郎", kana: "はとやまいちろう", times: 3, aliases: ["鳩山", "はとやま"] },
-    55: { name: "石橋湛山", kana: "いしばしたんざん", times: 1, aliases: ["石橋", "いしばし"] },
-    56: { name: "岸信介", kana: "きしのぶすけ", times: 1, aliases: ["岸", "きし"] },
-    57: { name: "岸信介", kana: "きしのぶすけ", times: 2, aliases: ["岸", "きし"] },
-    58: { name: "池田勇人", kana: "いけだはやと", times: 1, aliases: ["池田", "いけだ"] },
-    59: { name: "池田勇人", kana: "いけだはやと", times: 2, aliases: ["池田", "いけだ"] },
-    60: { name: "池田勇人", kana: "いけだはやと", times: 3, aliases: ["池田", "いけだ"] },
-    61: { name: "佐藤栄作", kana: "さとうえいさく", times: 1, aliases: ["佐藤", "さとう"] },
-    62: { name: "佐藤栄作", kana: "さとうえいさく", times: 2, aliases: ["佐藤", "さとう"] },
-    63: { name: "佐藤栄作", kana: "さとうえいさく", times: 3, aliases: ["佐藤", "さとう"] },
-    64: { name: "田中角栄", kana: "たなかかくえい", times: 1, aliases: ["田中", "たなか"] },
-    65: { name: "田中角栄", kana: "たなかかくえい", times: 2, aliases: ["田中", "たなか"] },
-    66: { name: "三木武夫", kana: "みきたけお", times: 1, aliases: ["三木", "みき"] },
-    67: { name: "福田赳夫", kana: "ふくだたけお", times: 1, aliases: ["福田", "ふくだ"] },
-    68: { name: "大平正芳", kana: "おおひらまさよし", times: 1, aliases: ["大平", "おおひら"] },
-    69: { name: "大平正芳", kana: "おおひらまさよし", times: 2, aliases: ["大平", "おおひら"] },
-    70: { name: "鈴木善幸", kana: "すずきぜんこう", times: 1, aliases: ["鈴木", "すずき"] },
-    71: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 1, aliases: ["中曽根", "なかそね"] },
-    72: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 2, aliases: ["中曽根", "なかそね"] },
-    73: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 3, aliases: ["中曽根", "なかそね"] },
-    74: { name: "竹下登", kana: "たけしたのぼる", times: 1, aliases: ["竹下", "たけした"] },
-    75: { name: "宇野宗佑", kana: "うのそうすけ", times: 1, aliases: ["宇野", "うの"] },
-    76: { name: "海部俊樹", kana: "かいふとしき", times: 1, aliases: ["海部", "かいふ"] },
-    77: { name: "海部俊樹", kana: "かいふとしき", times: 2, aliases: ["海部", "かいふ"] },
-    78: { name: "宮澤喜一", kana: "みやざわきいち", times: 1, aliases: ["宮沢喜一", "宮澤", "宮沢", "みやざわ"] },
-    79: { name: "細川護熙", kana: "ほそかわもりひろ", times: 1, aliases: ["細川", "ほそかわ"] },
-    80: { name: "羽田孜", kana: "はたつとむ", times: 1, aliases: ["羽田", "はた"] },
-    81: { name: "村山富市", kana: "むらやまとみいち", times: 1, aliases: ["村山", "むらやま"] },
-    82: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 1, aliases: ["橋本", "はしもと"] },
-    83: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 2, aliases: ["橋本", "はしもと"] },
-    84: { name: "小渕恵三", kana: "おぶちけいぞう", times: 1, aliases: ["小渕", "おぶち"] },
-    85: { name: "森喜朗", kana: "もりよしろう", times: 1, aliases: ["森", "もり"] },
-    86: { name: "森喜朗", kana: "もりよしろう", times: 2, aliases: ["森", "もり"] },
-    87: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 1, aliases: ["小泉", "こいずみ"] },
-    88: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 2, aliases: ["小泉", "こいずみ"] },
-    89: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 3, aliases: ["小泉", "こいずみ"] },
-    90: { name: "安倍晋三", kana: "あべしんぞう", times: 1, aliases: ["安倍", "あべ"] },
-    91: { name: "福田康夫", kana: "ふくだやすお", times: 1, aliases: ["福田", "ふくだ"] },
-    92: { name: "麻生太郎", kana: "あそうたろう", times: 1, aliases: ["麻生", "あそう"] },
-    93: { name: "鳩山由紀夫", kana: "はとやまゆきお", times: 1, aliases: ["鳩山", "はとやま"] },
-    94: { name: "菅直人", kana: "かんなおと", times: 1, aliases: ["菅", "かん"] },
-    95: { name: "野田佳彦", kana: "のだよしひこ", times: 1, aliases: ["野田", "のだ"] },
-    96: { name: "安倍晋三", kana: "あべしんぞう", times: 2, aliases: ["安倍", "あべ"] },
-    97: { name: "安倍晋三", kana: "あべしんぞう", times: 3, aliases: ["安倍", "あべ"] },
-    98: { name: "安倍晋三", kana: "あべしんぞう", times: 4, aliases: ["安倍", "あべ"] },
-    99: { name: "菅義偉", kana: "すがよしひで", times: 1, aliases: ["菅", "すが"] },
-    100: { name: "岸田文雄", kana: "きしだふみお", times: 1, aliases: ["岸田", "きしだ"] },
-    101: { name: "岸田文雄", kana: "きしだふみお", times: 2, aliases: ["岸田", "きしだ"] },
-    102: { name: "石破茂", kana: "いしばしげる", times: 1, aliases: ["石破", "いしば"] },
-    103: { name: "石破茂", kana: "いしばしげる", times: 2, aliases: ["石破", "いしば"] }
+    1: { name: "伊藤博文", kana: "いとうひろぶみ", times: 1, aliases: ["伊藤", "いとう"], era: "明治", fact: "大日本帝国憲法の制定に尽力" },
+    2: { name: "黒田清隆", kana: "くろだきよたか", times: 1, aliases: ["黒田", "くろだ"], era: "明治", fact: "薩摩藩出身。開拓使長官を務めた" },
+    3: { name: "山縣有朋", kana: "やまがたありとも", times: 1, aliases: ["山県有朋", "山縣", "山県", "やまがた"], era: "明治", fact: "長州藩出身。日本陸軍の父と呼ばれる" },
+    4: { name: "松方正義", kana: "まつかたまさよし", times: 1, aliases: ["松方", "まつかた"], era: "明治", fact: "デフレ政策（松方デフレ）を実施" },
+    5: { name: "伊藤博文", kana: "いとうひろぶみ", times: 2, aliases: ["伊藤", "いとう"], era: "明治", fact: "日清戦争時の総理大臣" },
+    6: { name: "松方正義", kana: "まつかたまさよし", times: 2, aliases: ["松方", "まつかた"], era: "明治", fact: "金本位制を確立した" },
+    7: { name: "伊藤博文", kana: "いとうひろぶみ", times: 3, aliases: ["伊藤", "いとう"], era: "明治", fact: "政党「立憲政友会」を結成" },
+    8: { name: "大隈重信", kana: "おおくましげのぶ", times: 1, aliases: ["大隈", "おおくま"], era: "明治", fact: "早稲田大学の創立者" },
+    9: { name: "山縣有朋", kana: "やまがたありとも", times: 2, aliases: ["山県有朋", "山縣", "山県", "やまがた"], era: "明治", fact: "文官任用令を改正" },
+    10: { name: "伊藤博文", kana: "いとうひろぶみ", times: 4, aliases: ["伊藤", "いとう"], era: "明治", fact: "初代韓国統監に就任" },
+    11: { name: "桂太郎", kana: "かつらたろう", times: 1, aliases: ["桂", "かつら"], era: "明治", fact: "日露戦争時の総理大臣。日英同盟を締結" },
+    12: { name: "西園寺公望", kana: "さいおんじきんもち", times: 1, aliases: ["西園寺", "さいおんじ"], era: "明治", fact: "公家出身。「桂園時代」を築いた" },
+    13: { name: "桂太郎", kana: "かつらたろう", times: 2, aliases: ["桂", "かつら"], era: "明治", fact: "韓国併合を断行" },
+    14: { name: "西園寺公望", kana: "さいおんじきんもち", times: 2, aliases: ["西園寺", "さいおんじ"], era: "明治・大正", fact: "明治から大正への改元時の総理大臣" },
+    15: { name: "桂太郎", kana: "かつらたろう", times: 3, aliases: ["桂", "かつら"], era: "大正", fact: "大正デモクラシー期（憲政の嘔吐）" },
+    16: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 1, aliases: ["山本", "やまもと"], era: "大正", fact: "日本海軍の父とされる" },
+    17: { name: "大隈重信", kana: "おおくましげのぶ", times: 2, aliases: ["大隈", "おおくま"], era: "大正", fact: "第一次世界大戦参戦時" },
+    18: { name: "寺内正毅", kana: "てらうちまさたけ", times: 1, aliases: ["寺内", "てらうち"], era: "大正", fact: "シベリア出兵や米騒動の時期" },
+    19: { name: "原敬", kana: "はらたかし", times: 1, aliases: ["原", "はら"], era: "大正", fact: "「平民宰相」と呼ばれた初の本格的政党内閣" },
+    20: { name: "高橋是清", kana: "たかはしこれきよ", times: 1, aliases: ["高橋", "たかはし"], era: "大正", fact: "ダルマ宰相と呼ばれた財政の天才" },
+    21: { name: "加藤友三郎", kana: "かとうともさぶろう", times: 1, aliases: ["加藤", "かとう"], era: "大正", fact: "ワシントン軍縮会議に出席" },
+    22: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 2, aliases: ["山本", "やまもと"], era: "大正", fact: "関東大震災発生時の復興内閣" },
+    23: { name: "清浦奎吾", kana: "きようらけいご", times: 1, aliases: ["清浦", "きようら"], era: "大正", fact: "貴族院中心の内閣（第二次護憲運動を招く）" },
+    24: { name: "加藤高明", kana: "かとうたかあき", times: 1, aliases: ["加藤", "かとう"], era: "大正", fact: "普通選挙法と治安維持法を成立させた" },
+    25: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 1, aliases: ["若槻礼次郎", "若槻", "わかつき"], era: "大正・昭和", fact: "金融恐慌が発生" },
+    26: { name: "田中義一", kana: "たなかぎいち", times: 1, aliases: ["田中", "たなか"], era: "昭和", fact: "張作霖爆殺事件で辞任" },
+    27: { name: "濱口雄幸", kana: "はまぐちおさち", times: 1, aliases: ["浜口雄幸", "濱口", "浜口", "はまぐち"], era: "昭和", fact: "「ライオン宰相」ロンドン海軍軍縮条約を調印" },
+    28: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 2, aliases: ["若槻礼次郎", "若槻", "わかつき"], era: "昭和", fact: "柳条湖事件（満州事変）が勃発" },
+    29: { name: "犬養毅", kana: "いぬかいつよし", times: 1, aliases: ["犬養", "いぬかい"], era: "昭和", fact: "五・一五事件で暗殺された（「話せばわかる」）" },
+    30: { name: "齋藤実", kana: "さいとうまこと", times: 1, aliases: ["斎藤実", "齋藤", "斎藤", "さいとう"], era: "昭和", fact: "国際連盟脱退時の挙国一致内閣" },
+    31: { name: "岡田啓介", kana: "おかだけいすけ", times: 1, aliases: ["岡田", "おかだ"], era: "昭和", fact: "二・二六事件で難を逃れた" },
+    32: { name: "廣田弘毅", kana: "ひろたこうき", times: 1, aliases: ["広田弘毅", "廣田", "広田", "ひろた"], era: "昭和", fact: "日独防共協定を締結" },
+    33: { name: "林銑十郎", kana: "はやしせんじゅうろう", times: 1, aliases: ["林", "はやし"], era: "昭和", fact: "「Eat and run（喰い逃げ）内閣」と呼ばれる" },
+    34: { name: "近衞文麿", kana: "このえふみまろ", times: 1, aliases: ["近衛文麿", "近衞", "近衛", "このえ"], era: "昭和", fact: "日中戦争開戦。国民精神総動員運動" },
+    35: { name: "平沼騏一郎", kana: "ひらぬまきいちろう", times: 1, aliases: ["平沼", "ひらぬま"], era: "昭和", fact: "「欧州情勢は複雑怪奇」と述べて辞任" },
+    36: { name: "阿部信行", kana: "あべのぶゆき", times: 1, aliases: ["阿部", "あべ"], era: "昭和", fact: "第二次世界大戦勃発時に中立を維持" },
+    37: { name: "米内光政", kana: "よないみつまさ", times: 1, aliases: ["米内", "よない"], era: "昭和", fact: "日独伊三国同盟に反対した海軍出身者" },
+    38: { name: "近衞文麿", kana: "このえふみまろ", times: 2, aliases: ["近衛文麿", "近衞", "近衛", "このえ"], era: "昭和", fact: "日独伊三国同盟を締結" },
+    39: { name: "近衞文麿", kana: "このえふみまろ", times: 3, aliases: ["近衛文麿", "近衞", "近衛", "このえ"], era: "昭和", fact: "日米交渉を進めるも難航" },
+    40: { name: "東條英機", kana: "とうじょうひでき", times: 1, aliases: ["東条英機", "東條", "東条", "とうじょう"], era: "昭和", fact: "太平洋戦争（開戦時）の開戦内閣" },
+    41: { name: "小磯國昭", kana: "こいそくニアき", times: 1, aliases: ["小磯国昭", "小磯", "こいそ"], era: "昭和", fact: "太平洋戦争末期の陸軍出身者" },
+    42: { name: "鈴木貫太郎", kana: "すずきかんたろう", times: 1, aliases: ["鈴木", "すずき"], era: "昭和", fact: "ポツダム宣言を受諾し終戦に導いた" },
+    43: { name: "東久邇宮稔彦王", kana: "ひがしくにのみやなるひこおう", times: 1, aliases: ["東久邇宮", "ひがしくにのみや"], era: "昭和", fact: "皇族唯一の総理大臣（終戦直後）" },
+    44: { name: "幣原喜重郎", kana: "しではらきじゅうろう", times: 1, aliases: ["幣原", "しではら"], era: "昭和", fact: "日本国憲法草案の作成期" },
+    45: { name: "吉田茂", kana: "よしだしげる", times: 1, aliases: ["吉田", "よしだ"], era: "昭和", fact: "「ワンマン宰相」農地改革などを実施" },
+    46: { name: "片山哲", kana: "かたやまてつ", times: 1, aliases: ["片山", "かたやま"], era: "昭和", fact: "社会党連立内閣（初の革新系宰相）" },
+    47: { name: "芦田均", kana: "あしだひとし", times: 1, aliases: ["芦田", "あしだ"], era: "昭和", fact: "昭和電工事件で退陣" },
+    48: { name: "吉田茂", kana: "よしだしげる", times: 2, aliases: ["吉田", "よしだ"], era: "昭和", fact: "ドッジ・ラインによるデフレ抑制" },
+    49: { name: "吉田茂", kana: "よしだしげる", times: 3, aliases: ["吉田", "よしだ"], era: "昭和", fact: "サンフランシスコ平和条約・日米安保調印" },
+    50: { name: "吉田茂", kana: "よしだしげる", times: 4, aliases: ["吉田", "よしだ"], era: "昭和", fact: "主権回復後の政治" },
+    51: { name: "吉田茂", kana: "よしだしげる", times: 5, aliases: ["吉田", "よしだ"], era: "昭和", fact: "「バカヤロー解散」で有名" },
+    52: { name: "鳩山一郎", kana: "はとやまいちろう", times: 1, aliases: ["鳩山", "はtoやま"], era: "昭和", fact: "保守合同で自民党結成（初代総裁）" },
+    53: { name: "鳩山一郎", kana: "はとやまいちろう", times: 2, aliases: ["鳩山", "はとやま"], era: "昭和", fact: "55年体制が本格スタート" },
+    54: { name: "鳩山一郎", kana: "はとやまいちろう", times: 3, aliases: ["鳩山", "はとやま"], era: "昭和", fact: "日ソ共同宣言を発表、国連加盟を果たした" },
+    55: { name: "石橋湛山", kana: "いしばしたんざん", times: 1, aliases: ["石橋", "いしばし"], era: "昭和", fact: "病気のためわずか65日で退陣" },
+    56: { name: "岸信介", kana: "きしのぶすけ", times: 1, aliases: ["岸", "きし"], era: "昭和", fact: "「昭和の妖怪」日米安全保障条約を改定" },
+    57: { name: "岸信介", kana: "きしのぶすけ", times: 2, aliases: ["岸", "きし"], era: "昭和", fact: "60年安保闘争と退陣" },
+    58: { name: "池田勇人", kana: "いけだはやと", times: 1, aliases: ["池田", "いけだ"], era: "昭和", fact: "「所得倍増計画」を打ち出した" },
+    59: { name: "池田勇人", kana: "いけだはやと", times: 2, aliases: ["池田", "いけだ"], era: "昭和", fact: "高度経済成長期の象徴" },
+    60: { name: "池田勇人", kana: "いけだはやと", times: 3, aliases: ["池田", "いけだ"], era: "昭和", fact: "東京オリンピック（1964）開幕直後に辞任" },
+    61: { name: "佐藤栄作", kana: "さとうえいさく", times: 1, aliases: ["佐藤", "さとう"], era: "昭和", fact: "非核三原則の提唱" },
+    62: { name: "佐藤栄作", kana: "さとうえいさく", times: 2, aliases: ["佐藤", "さとう"], era: "昭和", fact: "小笠原諸島の返還" },
+    63: { name: "佐藤栄作", kana: "さとうえいさく", times: 3, aliases: ["佐藤", "さとう"], era: "昭和", fact: "沖縄返還を果たす（ノーベル平和賞受賞）" },
+    64: { name: "田中角栄", kana: "たなかかくえい", times: 1, aliases: ["田中", "たなか"], era: "昭和", fact: "「日本列島改造論」日中国交正常化" },
+    65: { name: "田中角栄", kana: "たなかかくえい", times: 2, aliases: ["田中", "たなか"], era: "昭和", fact: "オイルショックによる狂乱物価" },
+    66: { name: "三木武夫", kana: "みきたけお", times: 1, aliases: ["三木", "みき"], era: "昭和", fact: "「クリーン三木」ロッキード事件の発覚" },
+    67: { name: "福田赳夫", kana: "ふくだたけお", times: 1, aliases: ["福田", "ふくだ"], era: "昭和", fact: "日中平和友好条約を締結" },
+    68: { name: "大平正芳", kana: "おおひらまさよし", times: 1, aliases: ["大平", "おおひら"], era: "昭和", fact: "「田園都市構想」サミット主催" },
+    69: { name: "大平正芳", kana: "おおひらまさよし", times: 2, aliases: ["大平", "おおひら"], era: "昭和", fact: "ハプニング解散・選挙中に急死" },
+    70: { name: "鈴木善幸", kana: "すずきぜんこう", times: 1, aliases: ["鈴木", "すずき"], era: "昭和", fact: "「和の政治」行政改革を進める" },
+    71: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 1, aliases: ["中曽根", "なかそね"], era: "昭和", fact: "「戦後政治の総決算」国鉄・電電公社の民営化" },
+    72: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 2, aliases: ["中曽根", "なかそね"], era: "昭和", fact: "プラザ合意・円高の進行" },
+    73: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 3, aliases: ["中曽根", "なかそね"], era: "昭和", fact: "JRやNTTが誕生" },
+    74: { name: "竹下登", kana: "たけしたのぼる", times: 1, aliases: ["竹下", "たけした"], era: "昭和・平成", fact: "消費税（3%）の導入・リクルート事件" },
+    75: { name: "宇野宗佑", kana: "うのそうすけ", times: 1, aliases: ["宇野", "うの"], era: "平成", fact: "わずか69日で退陣" },
+    76: { name: "海部俊樹", kana: "かいふとしき", times: 1, aliases: ["海部", "かいふ"], era: "平成", fact: "湾岸戦争への資金支援" },
+    77: { name: "海部俊樹", kana: "かいふとしき", times: 2, aliases: ["海部", "かいふ"], era: "平成", fact: "PKO協力法の提出" },
+    78: { name: "宮澤喜一", kana: "みやざわきいち", times: 1, aliases: ["宮沢喜一", "宮澤", "宮沢", "みやざわ"], era: "平成", fact: "バブル崩壊・PKO協力法成立" },
+    79: { name: "細川護熙", kana: "ほそかわもりひろ", times: 1, aliases: ["細川", "ほそかわ"], era: "平成", fact: "非自民8党派連立（55年体制崩壊）" },
+    80: { name: "羽田孜", kana: "はたつとむ", times: 1, aliases: ["羽田", "はた"], era: "平成", fact: "省スーツで有名。64日間の短命内閣" },
+    81: { name: "村山富市", kana: "むらやまとみいち", times: 1, aliases: ["村山", "むらやま"], era: "平成", fact: "阪神・淡路大震災、地下鉄サリン事件（村山談話）" },
+    82: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 1, aliases: ["橋本", "はしもと"], era: "平成", fact: "普天間基地返還合意" },
+    83: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 2, aliases: ["橋本", "はしもと"], era: "平成", fact: "消費税を5%に引き上げ" },
+    84: { name: "小渕恵三", kana: "おぶちけいぞう", times: 1, aliases: ["小渕", "おぶち"], era: "平成", fact: "「平成」の元号を発表（ブッチホン）" },
+    85: { name: "森喜朗", kana: "もりよしろう", times: 1, aliases: ["森", "もり"], era: "平成", fact: "IT基本法成立" },
+    86: { name: "森喜朗", kana: "もりよしろう", times: 2, aliases: ["森", "もり"], era: "平成", fact: "中央省庁再編（1府12省庁）" },
+    87: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 1, aliases: ["小泉", "こいずみ"], era: "平成", fact: "「聖域なき構造改革」北朝鮮訪問" },
+    88: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 2, aliases: ["小泉", "こいずみ"], era: "平成", fact: "自衛隊のイラク派遣" },
+    89: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 3, aliases: ["小泉", "こいずみ"], era: "平成", fact: "郵政民営化法案の可決（郵政解散）" },
+    90: { name: "安倍晋三", kana: "あべしんぞう", times: 1, aliases: ["安倍", "あべ"], era: "平成", fact: "防衛庁の「省」昇格、教育基本法改正" },
+    91: { name: "福田康夫", kana: "ふくだやすお", times: 1, aliases: ["福田", "ふくだ"], era: "平成", fact: "「あなたとは違うんです」で話題" },
+    92: { name: "麻生太郎", kana: "あそうたろう", times: 1, aliases: ["麻生", "あそう"], era: "平成", fact: "リーマン・ショックへの緊急経済対策" },
+    93: { name: "鳩山由紀夫", kana: "はとやまゆきお", times: 1, aliases: ["鳩山", "はとやま"], era: "平成", fact: "民主党への政権交代（「最低でも県外」）" },
+    94: { name: "菅直人", kana: "かんなおと", times: 1, aliases: ["菅", "かん"], era: "平成", fact: "東日本大震災・原発事故発生時の対応" },
+    95: { name: "野田佳彦", kana: "のだよしひこ", times: 1, aliases: ["野田", "のだ"], era: "平成", fact: "消費税増税法案の可決（10%への道）" },
+    96: { name: "安倍晋三", kana: "あべしんぞう", times: 2, aliases: ["安倍", "あべ"], era: "平成", fact: "アベノミクス（三本の矢）を推進" },
+    97: { name: "安倍晋三", kana: "あべしんぞう", times: 3, aliases: ["安倍", "あべ"], era: "平成", fact: "平和安全法制の成立" },
+    98: { name: "安倍晋三", kana: "あべしんぞう", times: 4, aliases: ["安倍", "あべ"], era: "平成・令和", fact: "歴代最長在任記録、平成から令和へ" },
+    99: { name: "菅義偉", kana: "すがよしひで", times: 1, aliases: ["菅", "すが"], era: "令和", fact: "「令和」を発表した官房長官、デジタル庁発足" },
+    100: { name: "岸田文雄", kana: "きしだふみお", times: 1, aliases: ["岸田", "きしだ"], era: "令和", fact: "「新しい資本主義」を提唱" },
+    101: { name: "岸田文雄", kana: "きしだふみお", times: 2, aliases: ["岸田", "きしだ"], era: "令和", fact: "G7広島サミット開催" },
+    102: { name: "石破茂", kana: "いしばしげる", times: 1, aliases: ["石破", "いしば"], era: "令和", fact: "地方創生・防災体制の強化を掲げる" },
+    103: { name: "石破茂", kana: "いしばしげる", times: 2, aliases: ["石破", "いしば"], era: "令和", fact: "衆院選後の特別国会で再指名" }
 };
 
 let questionPool = [];
@@ -190,6 +219,14 @@ let wrongAnswers = [];
 let timerInterval = null;
 let secondsElapsed = 0;
 let isTimerEnabled = true;
+
+// タイムアタック用
+let isTimeAttack = false;
+let timeAttackTimer = null;
+let timeLeft = 10;
+
+// ヒント用
+let isHintEnabled = true;
 
 function normalizeNumber(str) {
     const numMap = {
@@ -233,6 +270,7 @@ function startTimer() {
 
 function stopTimer() {
     if (timerInterval) clearInterval(timerInterval);
+    if (timeAttackTimer) clearInterval(timeAttackTimer);
 }
 
 function updateTimerDisplay() {
@@ -241,11 +279,59 @@ function updateTimerDisplay() {
     document.getElementById('timer-box').innerText = `⏱ ${mins}:${secs}`;
 }
 
+function startTimeAttack() {
+    if (timeAttackTimer) clearInterval(timeAttackTimer);
+    timeLeft = 10;
+    const bar = document.getElementById('time-bar');
+    bar.style.width = "100%";
+    bar.style.backgroundColor = "#28a745";
+
+    timeAttackTimer = setInterval(() => {
+        timeLeft -= 0.1;
+        const percentage = (timeLeft / 10) * 100;
+        bar.style.width = percentage + "%";
+
+        if (timeLeft <= 3) {
+            bar.style.backgroundColor = "#dc3545"; // 危険色（赤）
+        } else if (timeLeft <= 6) {
+            bar.style.backgroundColor = "#ffc107"; // 注意色（黄）
+        }
+
+        if (timeLeft <= 0) {
+            clearInterval(timeAttackTimer);
+            handleTimeOut();
+        }
+    }, 100);
+}
+
+function handleTimeOut() {
+    const q = questionPool[currentIndex];
+    document.getElementById('result-message').style.color = "red";
+    document.getElementById('result-message').innerText = `⏰ 時間切れ！ 正解は 第${q.number}代「${q.name}」（第${q.times}回目）でした`;
+    
+    wrongAnswers.push({
+        number: q.number,
+        name: q.name,
+        kana: q.kana,
+        times: q.times,
+        userAns: "（時間切れ）"
+    });
+
+    if (selectedDifficulty === "oni") {
+        setTimeout(() => { finishGame(true); }, 1800);
+    } else {
+        currentIndex++;
+        setTimeout(showQuestion, 1800);
+    }
+}
+
 function startGame() {
     const start = parseInt(document.getElementById('start-num').value);
     const end = parseInt(document.getElementById('end-num').value);
     selectedDifficulty = document.getElementById('difficulty').value;
     isTimerEnabled = document.getElementById('timer-toggle').checked;
+    isTimeAttack = document.getElementById('timeattack-toggle').checked;
+    isHintEnabled = document.getElementById('hint-toggle').checked;
 
     if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > 103) {
         alert("正しい範囲を入力してください（1〜103）");
@@ -277,11 +363,26 @@ function startGame() {
     document.getElementById('game-screen').classList.remove('hidden');
     document.getElementById('total-questions').innerText = questionPool.length;
 
+    // ストップウォッチ
     if (isTimerEnabled) {
         document.getElementById('timer-box').classList.remove('hidden');
         startTimer();
     } else {
         document.getElementById('timer-box').classList.add('hidden');
+    }
+
+    // タイムアタックゲージ表示制御
+    if (isTimeAttack) {
+        document.getElementById('time-bar-wrapper').classList.remove('hidden');
+    } else {
+        document.getElementById('time-bar-wrapper').classList.add('hidden');
+    }
+
+    // ヒントボタン制御
+    if (isHintEnabled) {
+        document.getElementById('hint-container').classList.remove('hidden');
+    } else {
+        document.getElementById('hint-container').classList.add('hidden');
     }
 
     if (selectedDifficulty === "oni") {
@@ -310,10 +411,31 @@ function showQuestion() {
     document.getElementById('result-message').innerText = "";
     document.getElementById('current-count').innerText = currentIndex + 1;
     document.getElementById('score').innerText = score;
+    
+    // ヒントテキスト初期化
+    document.getElementById('hint-text').classList.add('hidden');
+    document.getElementById('hint-text').innerText = "";
+
     document.getElementById('answer-input').focus();
+
+    // タイムアタック開始
+    if (isTimeAttack) {
+        startTimeAttack();
+    }
+}
+
+function showHint() {
+    const q = questionPool[currentIndex];
+    const hintBox = document.getElementById('hint-text');
+    hintBox.innerText = `時代: 【${q.era}】 / 出来事: ${q.fact}`;
+    hintBox.classList.remove('hidden');
 }
 
 function checkAnswer() {
+    if (isTimeAttack && timeAttackTimer) {
+        clearInterval(timeAttackTimer);
+    }
+
     const rawInput = document.getElementById('answer-input').value.trim();
     const q = questionPool[currentIndex];
 
@@ -367,9 +489,7 @@ function checkAnswer() {
 
         // 鬼ムズ（サドンデス）の場合は即時終了
         if (selectedDifficulty === "oni") {
-            setTimeout(() => {
-                finishGame(true);
-            }, 1800);
+            setTimeout(() => { finishGame(true); }, 1800);
         } else {
             currentIndex++;
             setTimeout(showQuestion, 1800);
@@ -380,6 +500,8 @@ function checkAnswer() {
 function finishGame(isSuddenDeath) {
     stopTimer();
     document.getElementById('input-container').style.display = "none";
+    document.getElementById('hint-container').classList.add('hidden');
+    document.getElementById('time-bar-wrapper').classList.add('hidden');
     document.getElementById('sub-hint').innerText = "";
 
     if (isSuddenDeath) {
@@ -424,6 +546,7 @@ function resetGame() {
     document.getElementById('input-container').style.display = "block";
     document.getElementById('wrong-summary').classList.add('hidden');
     document.getElementById('timer-box').classList.add('hidden');
+    document.getElementById('time-bar-wrapper').classList.add('hidden');
 }
 </script>
 
