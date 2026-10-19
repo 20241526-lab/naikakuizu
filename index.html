@@ -56,7 +56,8 @@
         <select id="difficulty" onchange="updateDesc()">
             <option value="easy">かんたん（苗字・ひらがなOK）</option>
             <option value="hard">むずかしい（苗字OK ＋ 就任回数）</option>
-            <option value="extreme">激ムズ（出来事から回答 ＋ フルネーム・就任回数）</option>
+            <option value="extreme">激ムズ（漢字フルネーム ＋ 就任回数）</option>
+            <option value="demon">鬼ムズ（出来事から回答 ＋ フルネーム・就任回数）</option>
         </select>
 
         <div class="option-group">
@@ -260,7 +261,9 @@ function updateDesc() {
     } else if (diff === "hard") {
         descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「伊藤」「伊藤1」「いとう」などで正解（※1回目は「1」省略可）";
     } else if (diff === "extreme") {
-        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>問題文が出来事になり、回答は「伊藤博文」「伊藤博文1」となります。";
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「第1代の内閣総理大臣は？」と出題。「伊藤博文」「伊藤博文1」などで正解（ヒント：歴史的背景）";
+    } else if (diff === "demon") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>出来事から出題され、「伊藤博文」「伊藤博文1」などで正解（ヒント：第1代目）";
     }
 }
 
@@ -404,8 +407,10 @@ function startGame() {
     }
 
     let modeTitle = "";
-    if (selectedDifficulty === "extreme") {
-        modeTitle = "【激ムズ】出来事から首相を推測（漢字フルネーム＋就任回数）";
+    if (selectedDifficulty === "demon") {
+        modeTitle = "【鬼ムズ】出来事から首相を推測（漢字フルネーム＋就任回数）";
+    } else if (selectedDifficulty === "extreme") {
+        modeTitle = "【激ムズ】第◯代から首相を推測（漢字フルネーム＋就任回数）";
     } else if (selectedDifficulty === "hard") {
         modeTitle = "【むずかしい】名前（＋就任回数）を入力（1回目は数字なし可）";
     } else {
@@ -429,7 +434,7 @@ function showQuestion() {
 
     const q = questionPool[currentIndex];
 
-    if (selectedDifficulty === "extreme") {
+    if (selectedDifficulty === "demon") {
         document.getElementById('question').innerText = q.event;
     } else {
         document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
@@ -442,7 +447,7 @@ function showQuestion() {
         hintContainer.classList.remove('hidden');
         hintBox.classList.add('hidden');
         
-        if (selectedDifficulty === "extreme") {
+        if (selectedDifficulty === "demon") {
             document.getElementById('hint-text').innerText = `第 ${q.number} 代目の内閣総理大臣`;
         } else {
             document.getElementById('hint-text').innerText = q.event;
@@ -499,7 +504,7 @@ function checkAnswer() {
         }
 
         isCorrect = correctPatterns.includes(normalizedInput);
-    } else if (selectedDifficulty === "extreme") {
+    } else if (selectedDifficulty === "extreme" || selectedDifficulty === "demon") {
         const normalizedInput = normalizeNumber(rawInput);
         let allowedNames = [q.name];
         if (q.aliases) {
@@ -579,7 +584,7 @@ function endGame(isClear) {
         wrongAnswers.forEach(item => {
             const li = document.createElement('li');
             let answerText = `${item.name}（${item.kana}）`;
-            if (selectedDifficulty === "hard" || selectedDifficulty === "extreme") {
+            if (selectedDifficulty === "hard" || selectedDifficulty === "extreme" || selectedDifficulty === "demon") {
                 answerText = item.times === 1 ? `${item.name}（または ${item.name}1）` : `${item.name}${item.times}`;
             }
             li.innerHTML = `<strong>第${item.number}代:</strong> 正解「${answerText}」 <span style="color:#718096; font-size:12px;">(あなたの入力: ${item.userAns})</span>`;
