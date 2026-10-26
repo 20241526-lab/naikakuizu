@@ -1,849 +1,605 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>モンハン漢字タイピング検定 - 超大ボリューム版</title>
-  <style>
-    :root {
-      --bg-dark: #0f0f13;
-      --panel-bg: rgba(26, 26, 36, 0.94);
-      --border-gold: #c5a059;
-      --border-dark: #3a3224;
-      --text-main: #f0e6d2;
-      --text-muted: #9e917d;
-      --accent-red: #d93838;
-      --accent-green: #38b000;
-      --gold-glow: 0 0 12px rgba(197, 160, 89, 0.4);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-
-    body {
-      background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 50% 30%, rgba(40, 30, 20, 0.6) 0%, rgba(10, 10, 15, 0.95) 80%),
-        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.2) 2px, rgba(0, 0, 0, 0.2) 4px);
-      color: var(--text-main);
-      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'MS PMincho', serif;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 720px;
-      background: var(--panel-bg);
-      border: 3px double var(--border-gold);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8), var(--gold-glow);
-      border-radius: 4px;
-      padding: 24px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .container::before {
-      content: '';
-      position: absolute;
-      top: 4px; left: 4px; right: 4px; bottom: 4px;
-      border: 1px solid rgba(197, 160, 89, 0.2);
-      pointer-events: none;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 1.8rem;
-      letter-spacing: 2px;
-      color: var(--border-gold);
-      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-      margin-bottom: 20px;
-      border-bottom: 2px solid var(--border-dark);
-      padding-bottom: 12px;
-    }
-
-    .screen {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .screen.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .setting-group {
-      margin-bottom: 18px;
-    }
-
-    .setting-title {
-      font-size: 1rem;
-      color: var(--border-gold);
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .options-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px;
-    }
-
-    .btn-radio {
-      background: rgba(15, 15, 20, 0.6);
-      border: 1px solid var(--border-dark);
-      color: var(--text-muted);
-      padding: 10px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
-      font-size: 0.95rem;
-    }
-
-    .btn-radio:hover {
-      border-color: var(--border-gold);
-      color: var(--text-main);
-    }
-
-    .btn-radio.selected {
-      background: rgba(197, 160, 89, 0.2);
-      border-color: var(--border-gold);
-      color: #fff;
-      font-weight: bold;
-      box-shadow: var(--gold-glow);
-    }
-
-    .btn-action {
-      width: 100%;
-      background: linear-gradient(180deg, #c5a059 0%, #8c6a2f 100%);
-      border: 1px solid #ffd700;
-      color: #111;
-      font-weight: bold;
-      font-size: 1.2rem;
-      padding: 14px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 20px;
-      text-shadow: 0 1px 1px rgba(255,255,255,0.4);
-      transition: all 0.2s;
-    }
-
-    .btn-action:hover {
-      filter: brightness(1.15);
-      transform: translateY(-1px);
-    }
-
-    .hud {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(0,0,0,0.4);
-      padding: 8px 14px;
-      border: 1px solid var(--border-dark);
-      font-size: 0.9rem;
-      margin-bottom: 20px;
-    }
-
-    .hud-val {
-      color: var(--border-gold);
-      font-weight: bold;
-    }
-
-    .question-box {
-      background: radial-gradient(circle, rgba(35, 25, 20, 0.9) 0%, rgba(15, 15, 20, 0.95) 100%);
-      border: 2px solid var(--border-gold);
-      border-radius: 6px;
-      padding: 30px 20px;
-      text-align: center;
-      margin-bottom: 20px;
-      position: relative;
-    }
-
-    .q-category {
-      position: absolute;
-      top: 10px;
-      left: 14px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      background: rgba(0,0,0,0.5);
-      padding: 2px 8px;
-      border-radius: 3px;
-    }
-
-    .q-kanji {
-      font-size: 2.8rem;
-      letter-spacing: 4px;
-      color: #ffffff;
-      text-shadow: 0 0 10px rgba(255,255,255,0.3), 2px 2px 4px #000;
-      margin: 10px 0;
-      min-height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .q-hint {
-      font-size: 0.9rem;
-      color: #ffd700;
-      min-height: 24px;
-    }
-
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    input[type="text"] {
-      flex: 1;
-      background: rgba(10, 10, 15, 0.9);
-      border: 2px solid var(--border-dark);
-      color: #fff;
-      font-size: 1.2rem;
-      padding: 10px 14px;
-      border-radius: 4px;
-      outline: none;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-
-    input[type="text"]:focus {
-      border-color: var(--border-gold);
-      box-shadow: 0 0 8px rgba(197, 160, 89, 0.3);
-    }
-
-    .btn-sub {
-      background: rgba(40, 35, 30, 0.8);
-      border: 1px solid var(--border-gold);
-      color: var(--text-main);
-      padding: 10px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-    }
-
-    .btn-sub:hover:not(:disabled) {
-      background: rgba(197, 160, 89, 0.3);
-      color: #fff;
-    }
-
-    .msg-area {
-      min-height: 28px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 1.1rem;
-    }
-
-    .msg-correct { color: var(--accent-green); }
-    .msg-wrong { color: var(--accent-red); }
-
-    .result-rank {
-      text-align: center;
-      margin: 20px 0;
-    }
-
-    .rank-title {
-      font-size: 1rem;
-      color: var(--text-muted);
-    }
-
-    .rank-name {
-      font-size: 2rem;
-      color: #ffd700;
-      text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
-      margin-top: 6px;
-    }
-
-    .score-detail {
-      background: rgba(0,0,0,0.4);
-      padding: 12px;
-      border-radius: 4px;
-      margin-bottom: 16px;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-
-    .review-list {
-      max-height: 220px;
-      overflow-y: auto;
-      border: 1px solid var(--border-dark);
-      padding: 10px;
-      background: rgba(10, 10, 15, 0.7);
-      border-radius: 4px;
-      font-size: 0.9rem;
-      margin-bottom: 20px;
-    }
-
-    .review-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding: 6px 0;
-      gap: 10px;
-    }
-
-    .review-item .item-info {
-      display: flex;
-      flex-direction: column;
-      text-align: left;
-    }
-
-    .review-item .item-kanji {
-      font-weight: bold;
-      color: #fff;
-      font-size: 1.05rem;
-    }
-
-    .review-item .item-sub {
-      font-size: 0.8rem;
-      color: #c5a059;
-    }
-
-    .review-item span.ok { color: var(--accent-green); font-weight: bold; }
-    .review-item span.ng { color: var(--accent-red); font-weight: bold; }
-
-    .sound-toggle {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 1.2rem;
-    }
-
-    @media (max-width: 480px) {
-      .q-kanji { font-size: 2rem; }
-      .container { padding: 16px; }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>歴代総理大臣当てゲーム</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #f0f4f8; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; max-width: 520px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input, button, select { font-size: 16px; padding: 10px; margin: 5px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .result { font-weight: bold; margin-top: 15px; font-size: 18px; }
+        .hidden { display: none; }
+        .mode-desc { font-size: 13px; color: #444; margin-top: 10px; text-align: left; background: #eef2f7; padding: 12px; border-radius: 6px; line-height: 1.5; }
+        .wrong-list { margin-top: 20px; text-align: left; background: #fff5f5; padding: 15px; border-radius: 8px; border: 1px solid #feb2b2; max-height: 250px; overflow-y: auto; }
+        .wrong-list h3 { margin-top: 0; color: #c53030; font-size: 16px; margin-bottom: 10px; }
+        .wrong-list ul { margin: 0; padding-left: 20px; font-size: 14px; }
+        .wrong-list li { margin-bottom: 6px; color: #2d3748; line-height: 1.4; }
+        .timer-display { font-size: 20px; font-weight: bold; color: #d9534f; margin-bottom: 10px; font-family: monospace; }
+        .option-group { margin-top: 15px; text-align: left; background: #fafafa; padding: 10px 15px; border-radius: 6px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px; }
+        
+        .hint-container { margin: 10px 0; }
+        .hint-btn { background-color: #ffc107; color: #212529; font-size: 14px; padding: 6px 14px; border-radius: 20px; font-weight: bold; }
+        .hint-btn:hover { background-color: #e0a800; }
+        .hint-box { background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 10px; border-radius: 6px; margin-top: 8px; font-weight: bold; line-height: 1.4; }
+        
+        .gauge-container {
+            width: 100%;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            height: 16px;
+            overflow: hidden;
+            margin: 10px 0;
+            border: 1px solid #cbd5e1;
+        }
+        .gauge-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #28a745;
+            transition: width 0.1s linear, background-color 0.3s ease;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  <button id="btnSound" class="sound-toggle" title="音量切替">🔊</button>
-  <h1>モンハン漢字タイピング検定</h1>
+<div class="card">
+    <h1>歴代総理大臣当てゲーム</h1>
 
-  <div id="screenSetup" class="screen active">
-    <div class="setting-group">
-      <div class="setting-title">⚔️ 出題ジャンル</div>
-      <div class="options-grid" id="optCategory">
-        <div class="btn-radio selected" data-value="all">すべて</div>
-        <div class="btn-radio" data-value="monster">モンスター (200+種)</div>
-        <div class="btn-radio" data-value="weapon">武器</div>
-        <div class="btn-radio" data-value="armor">防具</div>
-        <div class="btn-radio" data-value="item">アイテム・素材</div>
-      </div>
-    </div>
+    <div id="setup-screen">
+        <p><strong>① 出題範囲（1〜103代）</strong></p>
+        <label><input type="number" id="start-num" value="1" min="1" max="103"> 代目 〜 </label>
+        <label><input type="number" id="end-num" value="103" min="1" max="103"> 代目</label>
 
-    <div class="setting-group">
-      <div class="setting-title">📜 難易度</div>
-      <div class="options-grid" id="optDiff">
-        <div class="btn-radio selected" data-value="easy">
-          かんたん<br><small style="font-size:0.75rem; opacity:0.8;">(カタカナ名もOK)</small>
+        <p style="margin-top:20px;"><strong>② 難易度を選択</strong></p>
+        <select id="difficulty" onchange="updateDesc()">
+            <option value="easy">かんたん（苗字・ひらがなOK）</option>
+            <option value="hard">むずかしい（苗字OK ＋ 就任回数）</option>
+            <option value="extreme">激ムズ（漢字フルネーム ＋ 就任回数）</option>
+            <option value="demon">鬼ムズ（出来事から回答 ＋ フルネーム・就任回数）</option>
+        </select>
+
+        <div class="option-group">
+            <label style="cursor:pointer;">
+                <input type="checkbox" id="hint-toggle" checked> <strong>ヒント機能を表示する</strong>
+            </label>
+            <label style="cursor:pointer;">
+                <input type="checkbox" id="timer-toggle" checked> <strong>ストップウォッチ機能（タイム計測）</strong>
+            </label>
+            <label style="cursor:pointer; color: #c53030;">
+                <input type="checkbox" id="sudden-death-toggle"> <strong>サドンデス機能（1問ミスで即ゲームオーバー）</strong>
+            </label>
+            <label>
+                <strong>タイムアタック機能（1問の制限時間）:</strong><br>
+                <select id="time-attack-select" style="width: 100%; margin-top: 5px;">
+                    <option value="0">なし（時間制限なし）</option>
+                    <option value="10">1問 10秒</option>
+                    <option value="15">1問 15秒</option>
+                </select>
+            </label>
         </div>
-        <div class="btn-radio" data-value="hard">
-          むずかしい<br><small style="font-size:0.75rem; opacity:0.8;">(漢字読み限定)</small>
+        
+        <div class="mode-desc" id="mode-desc-text">
+            ・第1代（伊藤博文の1回目就任）の例：<br>
+            「伊藤」「いとう」「伊藤博文」などで正解
         </div>
-      </div>
+
+        <br>
+        <button onclick="startGame()">ゲームスタート</button>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-title">💡 ヒント機能</div>
-      <div class="options-grid" id="optHint">
-        <div class="btn-radio selected" data-value="on">ON</div>
-        <div class="btn-radio" data-value="off">OFF (封印)</div>
-      </div>
+    <div id="game-screen" class="hidden">
+        <div id="timer-box" class="timer-display hidden">⏱ 00:00</div>
+        
+        <div id="gauge-box" class="gauge-container hidden">
+            <div id="gauge-bar" class="gauge-bar"></div>
+        </div>
+
+        <h2 id="question">第?代の内閣総理大臣は？</h2>
+        
+        <div id="hint-container" class="hint-container hidden">
+            <button class="hint-btn" onclick="toggleHint()">💡 ヒントを見る</button>
+            <div id="hint-box" class="hint-box hidden"><span id="hint-text">-</span></div>
+        </div>
+
+        <p id="sub-hint">漢字またはひらがな（フルネーム/苗字のみ可）で入力してください</p>
+        
+        <div id="input-container">
+            <input type="text" id="answer-input" placeholder="名前を入力..." onkeydown="if(event.key==='Enter') checkAnswer()">
+            <button onclick="checkAnswer()">回答</button>
+        </div>
+        <div id="result-message" class="result"></div>
+        <p>進行状況: <span id="current-count">0</span> / <span id="total-questions">0</span> 題（正解: <span id="score">0</span>）</p>
+
+        <div id="wrong-summary" class="wrong-list hidden">
+            <h3>❌ 間違えた問題と正解</h3>
+            <ul id="wrong-ul"></ul>
+        </div>
+
+        <button id="reset-btn" onclick="resetGame()" style="background-color: #6c757d; margin-top: 15px;">範囲を選び直す</button>
     </div>
-
-    <div class="setting-group">
-      <div class="setting-title">🎯 出題数</div>
-      <div class="options-grid" id="optCount">
-        <div class="btn-radio selected" data-value="5">5問</div>
-        <div class="btn-radio" data-value="10">10問</div>
-        <div class="btn-radio" data-value="20">20問</div>
-        <div class="btn-radio" data-value="50">50問</div>
-      </div>
-    </div>
-
-    <button class="btn-action" id="btnStart">クエスト受注（開始）</button>
-  </div>
-
-  <div id="screenPlay" class="screen">
-    <div class="hud">
-      <div>問題: <span id="hudCurrent" class="hud-val">1</span> / <span id="hudTotal" class="hud-val">10</span></div>
-      <div>難易度: <span id="hudDiff" class="hud-val">かんたん</span></div>
-      <div>ヒント: <span id="hudHintStatus" class="hud-val">ON</span></div>
-    </div>
-
-    <div class="question-box">
-      <div class="q-category" id="qCategory">モンスター</div>
-      <div class="q-kanji" id="qKanji">雄火竜</div>
-      <div class="q-hint" id="qHint"></div>
-    </div>
-
-    <div class="input-group">
-      <input type="text" id="answerInput" placeholder="読みを入力（ひらがな・カタカナ）" autocomplete="off" />
-      <button class="btn-sub" id="btnSubmit">解答</button>
-    </div>
-
-    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-      <button class="btn-sub" id="btnHint" style="flex:1;">💡 1文字目ヒント</button>
-      <button class="btn-sub" id="btnGiveUp" style="flex:1;">🏳️ 降参（答えを見る）</button>
-    </div>
-
-    <div class="msg-area" id="msgArea"></div>
-  </div>
-
-  <div id="screenResult" class="screen">
-    <div class="result-rank">
-      <div class="rank-title">ハンター称号授与</div>
-      <div class="rank-name" id="resultRank">G級ハンター</div>
-    </div>
-
-    <div class="score-detail">
-      正解数: <span id="resCorrect">0</span> / <span id="resTotal">0</span> 問<br>
-      正答率: <span id="resRate">0</span> %
-    </div>
-
-    <div style="font-size:0.9rem; color:var(--border-gold); margin-bottom:6px; font-weight:bold;">📜 解答振り返り（名前・読み）</div>
-    <div class="review-list" id="reviewList"></div>
-
-    <button class="btn-action" id="btnRestart">拠点に戻る（再挑戦）</button>
-  </div>
 </div>
+
 <script>
-// --- データベース (250種超の完全網羅版) ---
-const KANJI_DATABASE = [
-  // 【初代〜P2G】
-  { kanji: "雄火竜", read: "おすかりゅう", katakana: "リオレウス", cat: "monster" },
-  { kanji: "銀火竜", read: "ぎんかりゅう", katakana: "リオレウス希少種", cat: "monster" },
-  { kanji: "雌火竜", read: "めすかりゅう", katakana: "リオレイア", cat: "monster" },
-  { kanji: "金火竜", read: "きんかりゅう", katakana: "リオレイア希少種", cat: "monster" },
-  { kanji: "角竜", read: "かくりゅう", katakana: "ディアブロス", cat: "monster" },
-  { kanji: "黒角竜", read: "こくかくりゅう", katakana: "ディアブロス亜種", cat: "monster" },
-  { kanji: "一角竜", read: "いっかくりゅう", katakana: "モノブロス", cat: "monster" },
-  { kanji: "白一角竜", read: "はくいっかくりゅう", katakana: "モノブロス亜種", cat: "monster" },
-  { kanji: "岩竜", read: "がんりゅう", katakana: "バサルモス", cat: "monster" },
-  { kanji: "鎧竜", read: "がいりゅう", katakana: "グラビモス", cat: "monster" },
-  { kanji: "黒鎧竜", read: "こくがいりゅう", katakana: "グラビモス亜種", cat: "monster" },
-  { kanji: "毒怪鳥", read: "どくかいちょう", katakana: "ゲリョス", cat: "monster" },
-  { kanji: "紫毒怪鳥", read: "しどくかいちょう", katakana: "ゲリョス亜種", cat: "monster" },
-  { kanji: "怪鳥", read: "かいちょう", katakana: "イャンクック", cat: "monster" },
-  { kanji: "青怪鳥", read: "せいかいちょう", katakana: "イャンクック亜種", cat: "monster" },
-  { kanji: "黒狼鳥", read: "こくろうちょう", katakana: "イャンガルルガ", cat: "monster" },
-  { kanji: "水竜", read: "すいりゅう", katakana: "ガノトトス", cat: "monster" },
-  { kanji: "翠水竜", read: "すいすいりゅう", katakana: "ガノトトス亜種", cat: "monster" },
-  { kanji: "沙竜", read: "さりゅう", katakana: "ドスガレオス", cat: "monster" },
-  { kanji: "眠鳥", read: "みんちょう", katakana: "ヒプノック", cat: "monster" },
-  { kanji: "雪獅子", read: "ゆきじし", katakana: "ドドブランゴ", cat: "monster" },
-  { kanji: "砂獅子", read: "すなじし", katakana: "ドドブランゴ亜種", cat: "monster" },
-  { kanji: "金獅子", read: "きんじし", katakana: "ラージャン", cat: "monster" },
-  { kanji: "激昂した金獅子", read: "げきこうしたきんじし", katakana: "激昂ラージャン", cat: "monster" },
-  { kanji: "桃毛獣", read: "ももけじゅう", katakana: "ババコンガ", cat: "monster" },
-  { kanji: "緑毛獣", read: "りょくもうじゅう", katakana: "ババコンガ亜種", cat: "monster" },
-  { kanji: "轟竜", read: "ごうりゅう", katakana: "ティガレックス", cat: "monster" },
-  { kanji: "黒轟竜", read: "こくごうりゅう", katakana: "ティガレックス亜種", cat: "monster" },
-  { kanji: "大轟竜", read: "だいごうりゅう", katakana: "ティガレックス希少種", cat: "monster" },
-  { kanji: "迅竜", read: "じんりゅう", katakana: "ナルガクルガ", cat: "monster" },
-  { kanji: "緑迅竜", read: "りょくじんりゅう", katakana: "ナルガクルガ亜種", cat: "monster" },
-  { kanji: "月迅竜", read: "げつじんりゅう", katakana: "ナルガクルガ希少種", cat: "monster" },
-  { kanji: "覇竜", read: "はりゅう", katakana: "アカムトルム", cat: "monster" },
-  { kanji: "崩竜", read: "ほうりゅう", katakana: "ウカムルバス", cat: "monster" },
-  { kanji: "老山龍", read: "ろうざんりゅう", katakana: "ラオシャンロン", cat: "monster" },
-  { kanji: "砦蟹", read: "さいかい", katakana: "シェンガオレン", cat: "monster" },
-  { kanji: "黒龍", read: "こくりゅう", katakana: "ミラボレアス", cat: "monster" },
-  { kanji: "紅龍", read: "こうりゅう", katakana: "ミラバルカン", cat: "monster" },
-  { kanji: "祖龍", read: "そりゅう", katakana: "ミラルーツ", cat: "monster" },
-
-  // 【3 / 3G / 4 / 4G】
-  { kanji: "海竜", read: "かいりゅう", katakana: "ラギアクルス", cat: "monster" },
-  { kanji: "白海竜", read: "はくかいりゅう", katakana: "ラギアクルス亜種", cat: "monster" },
-  { kanji: "冥海竜", read: "めいかいりゅう", katakana: "ラギアクルス希少種", cat: "monster" },
-  { kanji: "炎戈竜", read: "えんかりゅう", katakana: "アグナコトル", cat: "monster" },
-  { kanji: "凍戈竜", read: "とうかりゅう", katakana: "アグナコトル亜種", cat: "monster" },
-  { kanji: "潜口竜", read: "せんこうりゅう", katakana: "ハプルボッカ", cat: "monster" },
-  { kanji: "彩鳥", read: "さいちょう", katakana: "クルペッコ", cat: "monster" },
-  { kanji: "紅彩鳥", read: "こうさいちょう", katakana: "クルペッコ亜種", cat: "monster" },
-  { kanji: "土砂竜", read: "どしゃりゅう", katakana: "ボルボロス", cat: "monster" },
-  { kanji: "氷砕竜", read: "ひょうさいりゅう", katakana: "ボルボロス亜種", cat: "monster" },
-  { kanji: "爆鎚竜", read: "ばくついりゅう", katakana: "ウラガンキン", cat: "monster" },
-  { kanji: "鋼鎚竜", read: "こうついりゅう", katakana: "ウラガンキン亜種", cat: "monster" },
-  { kanji: "赤甲獣", read: "せきこうじゅう", katakana: "ラングロトラ", cat: "monster" },
-  { kanji: "白兎獣", read: "はくとじゅう", katakana: "ウルクスス", cat: "monster" },
-  { kanji: "青熊獣", read: "せいゆうじゅう", katakana: "アオアシラ", cat: "monster" },
-  { kanji: "雷狼竜", read: "らいろうりゅう", katakana: "ジンオウガ", cat: "monster" },
-  { kanji: "獄狼竜", read: "ごくろうりゅう", katakana: "ジンオウガ亜種", cat: "monster" },
-  { kanji: "碎竜", read: "さいりゅう", katakana: "ブラキディオス", cat: "monster" },
-  { kanji: "恐暴竜", read: "きょうぼうりゅう", katakana: "イビルジョー", cat: "monster" },
-  { kanji: "大海龍", read: "たいかいりゅう", katakana: "ナバルデウス", cat: "monster" },
-  { kanji: "皇海龍", read: "こうかいりゅう", katakana: "ナバルデウス亜種", cat: "monster" },
-  { kanji: "煌黒龍", read: "こうこくりゅう", katakana: "アルバトリオン", cat: "monster" },
-  { kanji: "煉黒龍", read: "れんこくりゅう", katakana: "グラン・ミラオス", cat: "monster" },
-  { kanji: "黒蝕竜", read: "こくしょくりゅう", katakana: "ゴア・マガラ", cat: "monster" },
-  { kanji: "天廻龍", read: "てんかいりゅう", katakana: "シャガルマガラ", cat: "monster" },
-  { kanji: "千刃竜", read: "せんじんりゅう", katakana: "セルレギオス", cat: "monster" },
-  { kanji: "蛇王龍", read: "じゃおうりゅう", katakana: "ダラ・アマデュラ", cat: "monster" },
-  { kanji: "巨戟龍", read: "きょげきりゅう", katakana: "ゴグマジオス", cat: "monster" },
-  { kanji: "化け鮫", read: "ばけざめ", katakana: "ザボアザギル", cat: "monster" },
-  { kanji: "影蜘蛛", read: "かげぐも", katakana: "ネルスキュラ", cat: "monster" },
-
-  // 【クロス / ダブルクロス】
-  { kanji: "斬竜", read: "ざんりゅう", katakana: "ディノバルド", cat: "monster" },
-  { kanji: "巨獣", read: "きょじゅう", katakana: "ガムート", cat: "monster" },
-  { kanji: "電主", read: "でんしゅ", katakana: "ライゼクス", cat: "monster" },
-  { kanji: "泡狐竜", read: "ほうこりゅう", katakana: "タマミツネ", cat: "monster" },
-  { kanji: "天彗龍", read: "てんすいりゅう", katakana: "バルファルク", cat: "monster" },
-  { kanji: "鏖魔", read: "おうま", katakana: "ディアブロス(二つ名)", cat: "monster" },
-  { kanji: "燼滅刃", read: "じんめつじん", katakana: "ディノバルド(二つ名)", cat: "monster" },
-  { kanji: "銀嶺", read: "ぎんれい", katakana: "ガムート(二つ名)", cat: "monster" },
-  { kanji: "青電主", read: "せいでんしゅ", katakana: "ライゼクス(二つ名)", cat: "monster" },
-  { kanji: "天眼", read: "てんがん", katakana: "タマミツネ(二つ名)", cat: "monster" },
-  { kanji: "隻眼", read: "せきがん", katakana: "イャンガルルガ(二つ名)", cat: "monster" },
-  { kanji: "荒鉤爪", read: "あらかぎづめ", katakana: "ティガレックス(二つ名)", cat: "monster" },
-  { kanji: "白疾風", read: "しろはやて", katakana: "ナルガクルガ(二つ名)", cat: "monster" },
-  { kanji: "金雷公", read: "きんらいこう", katakana: "ジンオウガ(二つ名)", cat: "monster" },
-  { kanji: "紫毒姫", read: "しどくひめ", katakana: "リオレイア(二つ名)", cat: "monster" },
-  { kanji: "黒炎王", read: "こくえんおう", katakana: "リオレウス(二つ名)", cat: "monster" },
-  { kanji: "骸龍", read: "がいりゅう", katakana: "オストガロア", cat: "monster" },
-  { kanji: "閣螳螂", read: "かくとうろう", katakana: "アトラル・カ", cat: "monster" },
-
-  // 【ワールド / アイスボーン】
-  { kanji: "滅尽龍", read: "めつじんりゅう", katakana: "ネルギガンテ", cat: "monster" },
-  { kanji: "熔山龍", read: "ようざんりゅう", katakana: "ゾラ・マグダラオス", cat: "monster" },
-  { kanji: "屍套龍", read: "しとうりゅう", katakana: "ヴァルハザク", cat: "monster" },
-  { kanji: "冥灯龍", read: "めいとうりゅう", katakana: "ゼノ・ジーヴァ", cat: "monster" },
-  { kanji: "赤龍", read: "せきりゅう", katakana: "ムフェト・ジーヴァ", cat: "monster" },
-  { kanji: "地煌龍", read: "ちこうりゅう", katakana: "アン・イシュワルダ", cat: "monster" },
-  { kanji: "冰龍", read: "ひょうりゅう", katakana: "イヴェルカーナ", cat: "monster" },
-  { kanji: "蛮顎竜", read: "ばんがくりゅう", katakana: "アンジャナフ", cat: "monster" },
-  { kanji: "飛雷竜", read: "ひらいりゅう", katakana: "トビカガチ", cat: "monster" },
-  { kanji: "惨爪竜", read: "さんそうりゅう", katakana: "オドガロン", cat: "monster" },
-  { kanji: "爆鱗竜", read: "ばくりんりゅう", katakana: "バゼルギウス", cat: "monster" },
-  { kanji: "眩鳥", read: "げんちょう", katakana: "ツィツィヤック", cat: "monster" },
-  { kanji: "掻鳥", read: "そうちょう", katakana: "クルルヤック", cat: "monster" },
-  { kanji: "泥魚竜", read: "でいぎょりゅう", katakana: "ジュラトドス", cat: "monster" },
-  { kanji: "浮空竜", read: "ふくうりゅう", katakana: "パオウルムー", cat: "monster" },
-  { kanji: "風漂竜", read: "ふうひょうりゅう", katakana: "レイギエナ", cat: "monster" },
-  { kanji: "絢輝龍", read: "けんきりゅう", katakana: "マム・タロト", cat: "monster" },
-
-  // 【ライズ / サンブレイク】
-  { kanji: "怨虎竜", read: "おんこりゅう", katakana: "マガイマガド", cat: "monster" },
-  { kanji: "爵銀龍", read: "しゃくぎんりゅう", katakana: "メル・ゼナ", cat: "monster" },
-  { kanji: "傘鳥", read: "さんちょう", katakana: "アケノシルム", cat: "monster" },
-  { kanji: "河童蛙", read: "かっぱあずま", katakana: "ヨツミワドウ", cat: "monster" },
-  { kanji: "人魚竜", read: "にんぎょりゅう", katakana: "イソネミクニ", cat: "monster" },
-  { kanji: "泥翁竜", read: "でいおうりゅう", katakana: "オロミドロ", cat: "monster" },
-  { kanji: "雪鬼獣", read: "せっきじゅう", katakana: "ゴシャハギ", cat: "monster" },
-  { kanji: "妃蜘蛛", read: "きさきぐも", katakana: "ヤツカダキ", cat: "monster" },
-  { kanji: "風神龍", read: "ふうじんりゅう", katakana: "イブシマキヒコ", cat: "monster" },
-  { kanji: "雷神龍", read: "らいじんりゅう", katakana: "ナルハタタヒメ", cat: "monster" },
-  { kanji: "冥淵龍", read: "めいえんりゅう", katakana: "ガイアデルム", cat: "monster" },
-  { kanji: "剛纏獣", read: "ごうてんじゅう", katakana: "ガランゴルム", cat: "monster" },
-  { kanji: "氷狼竜", read: "ひょうろうりゅう", katakana: "ルナガロン", cat: "monster" },
-
-  // 【ワイルズ (Wilds)】
-  { kanji: "煌雷竜", read: "こうらいりゅう", katakana: "レ・ダウ", cat: "monster" },
-  { kanji: "鎖刃竜", read: "さじんりゅう", katakana: "アルシュベルド", cat: "monster" },
-  { kanji: "沼噴竜", read: "しょうふんりゅう", katakana: "ププロポル", cat: "monster" },
-  { kanji: "赫猿獣", read: "かくえんじゅう", katakana: "アジャラカン", cat: "monster" },
-  { kanji: "纏食竜", read: "てんしょくりゅう", katakana: "ウズ・トゥナ", cat: "monster" },
-
-  // 【MHF / フロンティア・小型・その他】
-  { kanji: "不退龍", read: "ふたいりゅう", katakana: "ラヴィエンテ", cat: "monster" },
-  { kanji: "極龍", read: "きょくりゅう", katakana: "ルコディオラ", cat: "monster" },
-  { kanji: "蛮竜", read: "ばんりゅう", katakana: "グレンゼブル", cat: "monster" },
-  { kanji: "草食竜", read: "そうしょくりゅう", katakana: "アプトノス", cat: "monster" },
-  { kanji: "首長竜", read: "くびながりゅう", katakana: "リモセトス", cat: "monster" },
-  { kanji: "翼竜", read: "よくりゅう", katakana: "メルノス", cat: "monster" },
-
-  // --- 武器 ---
-  { kanji: "飛竜刀【葵】", read: "ひりゅうとうあおい", katakana: "太刀", cat: "weapon" },
-  { kanji: "角王剣アーティラート", read: "かくおうけんあーてぃらーと", katakana: "大剣", cat: "weapon" },
-  { kanji: "鬼神斬破刀", read: "きじんざんはとう", katakana: "太刀", cat: "weapon" },
-  { kanji: "阿武祖龍弩", read: "あぶそりゅうど", katakana: "ライトボウガン", cat: "weapon" },
-  { kanji: "煌黒鋭槍", read: "こうこくえいそう", katakana: "ランス", cat: "weapon" },
-  { kanji: "絶一門", read: "ぜついちもん", katakana: "片手剣", cat: "weapon" },
-  { kanji: "封龍剣", read: "ふうりゅうけん", katakana: "双剣", cat: "weapon" },
-  { kanji: "大鬼薙刀", read: "おおおになぎなた", katakana: "太刀", cat: "weapon" },
-  { kanji: "真・黒滅龍剣", read: "しん・こくめつりゅうけん", katakana: "片手剣", cat: "weapon" },
-  { kanji: "神滅剣アル・アルレボ", read: "しんめつけんあるあるれぼ", katakana: "大剣", cat: "weapon" },
-
-  // --- 防具 ---
-  { kanji: "革ノ胸当て", read: "かわのむねあて", katakana: "胴防具", cat: "armor" },
-  { kanji: "金色ノ袴", read: "こんじきのはかま", katakana: "脚防具", cat: "armor" },
-  { kanji: "日向・覇", read: "ひゅうがは", katakana: "剣士防具", cat: "armor" },
-  { kanji: "陸奥・覇", read: "むつは", katakana: "ガンナー防具", cat: "armor" },
-  { kanji: "大和・真", read: "やまとしん", katakana: "剣士防具", cat: "armor" },
-  { kanji: "城塞特務", read: "じょうさいとくむ", katakana: "胴防具", cat: "armor" },
-  { kanji: "レウスSヘルム", read: "れうすえすへるむ", katakana: "頭防具", cat: "armor" },
-  { kanji: "クシャナメイル", read: "くしゃなめいる", katakana: "胴防具", cat: "armor" },
-
-  // --- アイテム・素材 ---
-  { kanji: "強走薬グレート", read: "きょうそうやくぐれーと", katakana: "アイテム", cat: "item" },
-  { kanji: "大タル爆弾G", read: "おおたるばくだんじー", katakana: "アイテム", cat: "item" },
-  { kanji: "秘薬", read: "ひやく", katakana: "アイテム", cat: "item" },
-  { kanji: "古龍骨", read: "こりゅうこつ", katakana: "素材", cat: "item" },
-  { kanji: "逆鱗", read: "げきりん", katakana: "レア素材", cat: "item" },
-  { kanji: "紅玉", read: "こうぎょく", katakana: "レア素材", cat: "item" },
-  { kanji: "天鱗", read: "てんりん", katakana: "レア素材", cat: "item" },
-  { kanji: "宝玉", read: "ほうぎょく", katakana: "レア素材", cat: "item" },
-  { kanji: "龍玉", read: "りゅうぎょく", katakana: "レア素材", cat: "item" },
-  { kanji: "翔蟲", read: "かけりむし", katakana: "環境生物/素材", cat: "item" },
-  { kanji: "砥石", read: "といし", katakana: "アイテム", cat: "item" },
-  { kanji: "神島", read: "かみしま", katakana: "太古の塊", cat: "item" }
-];
-
-// --- Web Audio API (効果音) ---
-class SoundManager {
-  constructor() {
-    this.ctx = null;
-    this.muted = false;
-  }
-  init() {
-    if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  playCorrect() {
-    if (this.muted) return;
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(523.25, this.ctx.currentTime);
-    osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.1);
-    osc.frequency.setValueAtTime(783.99, this.ctx.currentTime + 0.2);
-    gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.4);
-  }
-  playWrong() {
-    if (this.muted) return;
-    this.init();
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.connect(gain);
-    gain.connect(this.ctx.destination);
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(150, this.ctx.currentTime);
-    osc.frequency.linearRampToValueAtTime(80, this.ctx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
-    osc.start();
-    osc.stop(this.ctx.currentTime + 0.3);
-  }
-}
-
-const snd = new SoundManager();
-
-let state = {
-  category: "all",
-  difficulty: "easy",
-  hintEnabled: true,
-  totalQuestions: 5,
-  currentIndex: 0,
-  score: 0,
-  questions: [],
-  history: []
+const pmMasterData = {
+    1: { name: "伊藤博文", kana: "いとうひろぶみ", times: 1, event: "初代内閣総理大臣として大日本帝国憲法を発布した人物は？", aliases: ["伊藤", "いとう"] },
+    2: { name: "黒田清隆", kana: "くろだきよたか", times: 1, event: "薩摩藩出身で超然主義演説を行った人物は？", aliases: ["黒田", "くろだ"] },
+    3: { name: "山縣有朋", kana: "やまがたありとも", times: 1, event: "日本陸軍の父と呼ばれ第1回衆議院議員総選挙を実施した人物は？", aliases: ["山県有朋", "山縣", "山県", "やまがた"] },
+    4: { name: "松方正義", kana: "まつかたまさよし", times: 1, event: "松方デフレ政策や紙幣整理を断行した人物は？", aliases: ["松方", "まつかた"] },
+    5: { name: "伊藤博文", kana: "いとうひろぶみ", times: 2, event: "日清戦争を指揮し下関条約を締結した人物は？", aliases: ["伊藤", "いとう"] },
+    6: { name: "松方正義", kana: "まつかたまさよし", times: 2, event: "金本位制を確立し貨幣法を制定した人物は？", aliases: ["松方", "まつかた"] },
+    7: { name: "伊藤博文", kana: "いとうひろぶみ", times: 3, event: "明治31年に組閣し地租増徴案が否決された人物は？", aliases: ["伊藤", "いとう"] },
+    8: { name: "大隈重信", kana: "おおくましげのぶ", times: 1, event: "日本初の政党内閣（隈板内閣）を結成した人物は？", aliases: ["大隈", "おおくま"] },
+    9: { name: "山縣有朋", kana: "やまがたありとも", times: 2, event: "軍部大臣現役武官制や治安警察法を制定した人物は？", aliases: ["山県有朋", "山縣", "山県", "やまがた"] },
+    10: { name: "伊藤博文", kana: "いとうひろぶみ", times: 4, event: "立憲政友会を結成し自ら初代総裁に就任した人物は？", aliases: ["伊藤", "いとう"] },
+    11: { name: "桂太郎", kana: "かつらたろう", times: 1, event: "日英同盟を締結し日露戦争を指揮した人物は？", aliases: ["桂", "かつら"] },
+    12: { name: "西園寺公望", kana: "さいおんじきんもち", times: 1, event: "公家出身で桂太郎とともに「桂園時代」を形成した人物は？", aliases: ["西園寺", "さいおんじ"] },
+    13: { name: "桂太郎", kana: "かつらたろう", times: 2, event: "韓国併合を断行し大逆事件が発生した際の人物は？", aliases: ["桂", "かつら"] },
+    14: { name: "西園寺公望", kana: "さいおんじきんもち", times: 2, event: "2個師団増設問題をめぐり陸軍と対立して辞職した人物は？", aliases: ["西園寺", "さいおんじ"] },
+    15: { name: "桂太郎", kana: "かつらたろう", times: 3, event: "第一次護憲運動（大正政変）により短期間で退陣した人物は？", aliases: ["桂", "かつら"] },
+    16: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 1, event: "日本海軍の父と呼ばれシーメンス事件で辞職した人物は？", aliases: ["山本", "やまもと"] },
+    17: { name: "大隈重信", kana: "おおくましげのぶ", times: 2, event: "早稲田大学創立者で対華21カ条要求を出した人物は？", aliases: ["大隈", "おおくま"] },
+    18: { name: "寺内正毅", kana: "てらうちまさたけ", times: 1, event: "「ビリケン宰相」と呼ばれ米騒動の責任をとって辞職した人物は？", aliases: ["寺内", "てらうち"] },
+    19: { name: "原敬", kana: "はらたかし", times: 1, event: "「平民宰相」と呼ばれ本格的な政党内閣を結成した人物は？", aliases: ["原", "はら"] },
+    20: { name: "高橋是清", kana: "たかはしこれきよ", times: 1, event: "「ダルマ宰相」と呼ばれワシントン軍縮条約を批准した人物は？", aliases: ["高橋", "たかはし"] },
+    21: { name: "加藤友三郎", kana: "かとうともさぶろう", times: 1, event: "海軍提督で山東出兵の撤兵を実施した人物は？", aliases: ["加藤", "かとう"] },
+    22: { name: "山本権兵衛", kana: "やまもとごんべえ", times: 2, event: "関東大震災の発生直後に非常時内閣を組閣した人物は？", aliases: ["山本", "やまもと"] },
+    23: { name: "清浦奎吾", kana: "きようらけいご", times: 1, event: "貴族院中心の特権内閣を作り第二次護憲運動を引き起こした人物は？", aliases: ["清浦", "きようら"] },
+    24: { name: "加藤高明", kana: "かとうたかあき", times: 1, event: "普通選挙法および治安維持法を制定した人物は？", aliases: ["加藤", "かとう"] },
+    25: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 1, event: "昭和金融恐慌への対応に追われた人物は？", aliases: ["若槻礼次郎", "若槻", "わかつき"] },
+    26: { name: "田中義一", kana: "たなかぎいち", times: 1, event: "陸軍大将で山東出兵や張作霖爆殺事件に対応した人物は？", aliases: ["田中", "たなか"] },
+    27: { name: "濱口雄幸", kana: "はまぐちおさち", times: 1, event: "「ライオン宰相」と呼ばれ金解禁を実施し東京駅で狙撃された人物は？", aliases: ["浜口雄幸", "濱口", "浜口", "はまぐち"] },
+    28: { name: "若槻禮次郎", kana: "わかつきれいじろう", times: 2, event: "満州事変の不拡大方針を掲げるも抑えきれず辞職した人物は？", aliases: ["若槻礼次郎", "若槻", "わかつき"] },
+    29: { name: "犬養毅", kana: "いぬかいつよし", times: 1, event: "「話せば分かる」の言葉を残し五・一五事件で暗殺された人物は？", aliases: ["犬養", "いぬかい"] },
+    30: { name: "齋藤実", kana: "さいとうまこと", times: 1, event: "海軍大将で国際連盟脱退を決意した挙国一致内閣の人物は？", aliases: ["斎藤実", "齋藤", "斎藤", "さいとう"] },
+    31: { name: "岡田啓介", kana: "おかだけいすけ", times: 1, event: "二・二六事件で反乱軍の襲撃を難逃れた人物は？", aliases: ["岡田", "おかだ"] },
+    32: { name: "廣田弘毅", kana: "ひろたこうき", times: 1, event: "文官として唯一A級戦犯となった元外交官の人物は？", aliases: ["広田弘毅", "廣田", "広田", "ひろた"] },
+    33: { name: "林銑十郎", kana: "はやしせんじゅうろう", times: 1, event: "「食い逃げ解散」で有名な短命内閣を率いた人物は？", aliases: ["林", "はやし"] },
+    34: { name: "近衞文麿", kana: "このえふみまろ", times: 1, event: "公家名門の出身で国家総動員法を制定した人物は？", aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
+    35: { name: "平沼騏一郎", kana: "ひらぬまきいちろう", times: 1, event: "「欧州情勢は複雑怪奇」の名言を残して辞職した人物は？", aliases: ["平沼", "ひらぬま"] },
+    36: { name: "阿部信行", kana: "あべのぶゆき", times: 1, event: "第二次世界大戦勃発時に「中立・不介入」を宣言した人物は？", aliases: ["阿部", "あべ"] },
+    37: { name: "米内光政", kana: "よないみつまさ", times: 1, event: "海軍のリベラル派で日独伊三国同盟に反対した人物は？", aliases: ["米内", "よない"] },
+    38: { name: "近衞文麿", kana: "このえふみまろ", times: 2, event: "大政翼賛会を結成し日独伊三国同盟を締結した人物は？", aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
+    39: { name: "近衞文麿", kana: "このえふみまろ", times: 3, event: "南部仏印進駐を断行し日米交渉難航で総辞職した人物は？", aliases: ["近衛文麿", "近衞", "近衛", "このえ"] },
+    40: { name: "東條英機", kana: "とうじょうひでき", times: 1, event: "太平洋戦争を開戦した陸軍大将の人物は？", aliases: ["東条英機", "東條", "東条", "とうじょう"] },
+    41: { name: "小磯國昭", kana: "こいそくニアき", times: 1, event: "戦局悪化の中で組閣しレイテ沖海戦などを指揮した人物は？", aliases: ["小磯国昭", "小磯", "こいそ"] },
+    42: { name: "鈴木貫太郎", kana: "すずきかんたろう", times: 1, event: "ポツダム宣言受諾・終戦を決断した人物は？", aliases: ["鈴木", "すずき"] },
+    43: { name: "東久邇宮稔彦王", kana: "ひがしくにのみやなるひこおう", times: 1, event: "唯一の皇族出身の内閣総理大臣は？", aliases: ["東久邇宮", "ひがしくにのみや"] },
+    44: { name: "幣原喜重郎", kana: "しではらきじゅうろう", times: 1, event: "日本国憲法草案の作成や女性参政権を実現した人物は？", aliases: ["幣原", "しではら"] },
+    45: { name: "吉田茂", kana: "よしだしげる", times: 1, event: "「ワンマン宰相」と呼ばれ日本国憲法を公布した人物は？", aliases: ["吉田", "よしだ"] },
+    46: { name: "片山哲", kana: "かたやまてつ", times: 1, event: "日本社会党初の首相で労働省を新設した人物は？", aliases: ["片山", "かたやま"] },
+    47: { name: "芦田均", kana: "あしだひとし", times: 1, event: "憲法9条の修正に関与し昭和電工事件で下野した人物は？", aliases: ["芦田", "あしだ"] },
+    48: { name: "吉田茂", kana: "よしだしげる", times: 2, event: "第2次組閣を行い解散総選挙で政権を維持した人物は？", aliases: ["吉田", "よしだ"] },
+    49: { name: "吉田茂", kana: "よしだしげる", times: 3, event: "ドッジ・ラインを実施し警察予備隊を創設した人物は？", aliases: ["吉田", "よしだ"] },
+    50: { name: "吉田茂", kana: "よしだしげる", times: 4, event: "サンフランシスコ平和条約や日米安保条約に調印した人物は？", aliases: ["吉田", "よしだ"] },
+    51: { name: "吉田茂", kana: "よしだしげる", times: 5, event: "「バカヤロー解散」を敢行した長期政権の人物は？", aliases: ["吉田", "よしだ"] },
+    52: { name: "鳩山一郎", kana: "はとやまいちろう", times: 1, event: "保守合同を主導し自由民主党を結成した人物は？", aliases: ["鳩山", "はとやま"] },
+    53: { name: "鳩山一郎", kana: "はとやまいちろう", times: 2, event: "自民党初代総裁として第2次組閣を行った人物は？", aliases: ["鳩山", "はとやま"] },
+    54: { name: "鳩山一郎", kana: "はとやまいちろう", times: 3, event: "日ソ共同宣言に調印し国際連合加盟を達成した人物は？", aliases: ["鳩山", "はとやま"] },
+    55: { name: "石橋湛山", kana: "いしばしたんざん", times: 1, event: "小日本主義を提唱したジャーナリスト出身で病気で短命辞任した人物は？", aliases: ["石橋", "いしばし"] },
+    56: { name: "岸信介", kana: "きしのぶすけ", times: 1, event: "「昭和の妖怪」と呼ばれ日米安保条約の改定に着手した人物は？", aliases: ["岸", "きし"] },
+    57: { name: "岸信介", kana: "きしのぶすけ", times: 2, event: "新安保条約の強行採決を行い安保闘争の中で退陣した人物は？", aliases: ["岸", "きし"] },
+    58: { name: "池田勇人", kana: "いけだはやと", times: 1, event: "「所得倍増計画」を打ち出し高度経済成長を牽引した人物は？", aliases: ["池田", "いけだ"] },
+    59: { name: "池田勇人", kana: "いけだはやと", times: 2, event: "「寛容と忍耐」を掲げOECD加盟を果たした人物は？", aliases: ["池田", "いけだ"] },
+    60: { name: "池田勇人", kana: "いけだはやと", times: 3, event: "1964年東京オリンピックを開催した人物は？", aliases: ["池田", "いけだ"] },
+    61: { name: "佐藤栄作", kana: "さとうえいさく", times: 1, event: "日韓基本条約を締結した人物は？", aliases: ["佐藤", "さとう"] },
+    62: { name: "佐藤栄作", kana: "さとうえいさく", times: 2, event: "「非核三原則」を表明した人物は？", aliases: ["佐藤", "さとう"] },
+    63: { name: "佐藤栄作", kana: "さとうえいさく", times: 3, event: "沖縄返還を達成しノーベル平和賞を受賞した人物は？", aliases: ["佐藤", "さとう"] },
+    64: { name: "田中角栄", kana: "たなかかくえい", times: 1, event: "「コンピューター付きブルドーザー」と呼ばれ日中国交正常化を果たした人物は？", aliases: ["田中", "たなか"] },
+    65: { name: "田中角栄", kana: "たなかかくえい", times: 2, event: "「日本列島改造論」を推進しオイルショックに対応した人物は？", aliases: ["田中", "たなか"] },
+    66: { name: "三木武夫", kana: "みきたけお", times: 1, event: "「クリーン政治」を掲げロッキード事件の全貌解明に取り組んだ人物は？", aliases: ["三木", "みき"] },
+    67: { name: "福田赳夫", kana: "ふくだたけお", times: 1, event: "日中平和友好条約に調印し福田ドクトリンを発表した人物は？", aliases: ["福田", "ふくだ"] },
+    68: { name: "大平正芳", kana: "おおひらまさよし", times: 1, event: "「田園都市構想」を掲げた人物は？", aliases: ["大平", "おおひら"] },
+    69: { name: "大平正芳", kana: "おおひらまさよし", times: 2, event: "ハプニング解散を行い衆参同日選挙の最中に急逝した人物は？", aliases: ["大平", "おおひら"] },
+    70: { name: "鈴木善幸", kana: "すずきぜんこう", times: 1, event: "「和の政治」を掲げ第二次臨調を発足させた人物は？", aliases: ["鈴木", "すずき"] },
+    71: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 1, event: "「戦後政治の総決算」を掲げロン-ヤス関係を構築した人物は？", aliases: ["中曽根", "なかそね"] },
+    72: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 2, event: "プラザ合意や円高の進行に対応した人物は？", aliases: ["中曽根", "なかそね"] },
+    73: { name: "中曽根康弘", kana: "なかそねやすひろ", times: 3, event: "国鉄・電電公社・専売公社の三公社民営化を達成した人物は？", aliases: ["中曽根", "なかそね"] },
+    74: { name: "竹下登", kana: "たけしたのぼる", times: 1, event: "消費税（3%）を初導入しリクルート事件で退陣した人物は？", aliases: ["竹下", "たけした"] },
+    75: { name: "宇野宗佑", kana: "うのそうすけ", times: 1, event: "平成最初の首相で参議院選挙大敗により短命退陣した人物は？", aliases: ["宇野", "うの"] },
+    76: { name: "海部俊樹", kana: "かいふとしき", times: 1, event: "湾岸戦争への対応で自衛隊初の海外派遣（掃海艇）を行った人物は？", aliases: ["海部", "かいふ"] },
+    77: { name: "海部俊樹", kana: "かいふとしき", times: 2, event: "政治改革関連法案の廃案に伴い「本気解散」を模索し断念した人物は？", aliases: ["海部", "かいふ"] },
+    78: { name: "宮澤喜一", kana: "みやざわきいち", times: 1, event: "PKO協力法を制定した55年体制最後の自民党単独政権の人物は？", aliases: ["宮沢喜一", "宮澤", "宮沢", "みやざわ"] },
+    79: { name: "細川護熙", kana: "ほそかわもりひろ", times: 1, event: "38年ぶりの非自民連立内閣で小選挙区制などの政治改革を行った人物は？", aliases: ["細川", "ほそかわ"] },
+    80: { name: "羽田孜", kana: "はたつとむ", times: 1, event: "省エネルックで知られ在任64日の短命内閣に終わった人物は？", aliases: ["羽田", "はた"] },
+    81: { name: "村山富市", kana: "むらやまとみいち", times: 1, event: "自社さ連立内閣で阪神淡路大震災への対応や村山談話を発表した人物は？", aliases: ["村山", "むらやま"] },
+    82: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 1, event: "住専処理問題や中央省庁再編などの行政改革を断行した人物は？", aliases: ["橋本", "はしもと"] },
+    83: { name: "橋本龍太郎", kana: "はしもとりゅうたろう", times: 2, event: "消費税率を5%に引き上げた人物は？", aliases: ["橋本", "はしもと"] },
+    84: { name: "小渕恵三", kana: "おぶちけいぞう", times: 1, event: "「ブッチホン」や自公連立政権の樹立・2000年札発行を行った人物は？", aliases: ["小渕", "おぶち"] },
+    85: { name: "森喜朗", kana: "もりよしろう", times: 1, event: "IT基本法を制定し「IT革命」を推進した人物は？", aliases: ["森", "もり"] },
+    86: { name: "森喜朗", kana: "もりよしろう", times: 2, event: "九州・沖縄サミットを開催した人物は？", aliases: ["森", "もり"] },
+    87: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 1, event: "「聖域なき構造改革」を掲げ日朝首脳会談で訪朝した人物は？", aliases: ["小泉", "こいずみ"] },
+    88: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 2, event: "自衛隊のイラク派遣を決定した人物は？", aliases: ["小泉", "こいずみ"] },
+    89: { name: "小泉純一郎", kana: "こいずみじゅんいちろう", times: 3, event: "郵政解散を行い郵政民営化法案を成立させた人物は？", aliases: ["小泉", "こいずみ"] },
+    90: { name: "安倍晋三", kana: "あべしんぞう", times: 1, event: "戦後生まれ初の首相で防衛庁を「防衛省」へ昇格させた人物は？", aliases: ["安倍", "あべ"] },
+    91: { name: "福田康夫", kana: "ふくだやすお", times: 1, event: "親子2代で首相を務め消費者庁の設置を決定した人物は？", aliases: ["福田", "ふくだ"] },
+    92: { name: "麻生太郎", kana: "あそうたろう", times: 1, event: "リーマン・ショックに対処し定額給付金を実施した人物は？", aliases: ["麻生", "あそう"] },
+    93: { name: "鳩山由紀夫", kana: "はとやまゆきお", times: 1, event: "民主党への政権交代を果たし「事業仕分け」を実施した人物は？", aliases: ["鳩山", "はとやま"] },
+    94: { name: "菅直人", kana: "かんなおと", times: 1, event: "東日本大震災および福島第一原発事故に対応した人物は？", aliases: ["菅", "かん"] },
+    95: { name: "野田佳彦", kana: "のだよしひこ", times: 1, event: "社会保障と税の一体改革（消費税増税法案の成立）を果たした人物は？", aliases: ["野田", "のだ"] },
+    96: { name: "安倍晋三", kana: "あべしんぞう", times: 2, event: "政権を奪還し「アベノミクス」や東京五輪誘致を推進した人物は？", aliases: ["安倍", "あべ"] },
+    97: { name: "安倍晋三", kana: "あべしんぞう", times: 3, event: "平和安全法制（安保法制）を成立させた人物は？", aliases: ["安倍", "あべ"] },
+    98: { name: "安倍晋三", kana: "あべしんぞう", times: 4, event: "令和への改元を跨ぎ憲政史上最長の通算在任記録を樹立した人物は？", aliases: ["安倍", "あべ"] },
+    99: { name: "菅義偉", kana: "すがよしひで", times: 1, event: "デジタル庁の発足や東京2020オリンピックを開催した人物は？", aliases: ["菅", "すが"] },
+    100: { name: "岸田文雄", kana: "きしだふみお", times: 1, event: "「新しい資本主義」を推進した第100代目の人物は？", aliases: ["岸田", "きしだ"] },
+    101: { name: "岸田文雄", kana: "きしだふみお", times: 2, event: "防衛費増額やG7広島サミットを主導した人物は？", aliases: ["岸田", "きしだ"] },
+    102: { name: "石破茂", kana: "いしばしげる", times: 1, event: "自民党総裁選を勝ち抜き第102代に就任した人物は？", aliases: ["石破", "いしば"] },
+    103: { name: "石破茂", kana: "いしばしげる", times: 2, event: "衆議院解散総選挙を経て第103代に指名された人物は？", aliases: ["石破", "いしば"] }
 };
 
-const screens = {
-  setup: document.getElementById("screenSetup"),
-  play: document.getElementById("screenPlay"),
-  result: document.getElementById("screenResult")
-};
+let questionPool = [];
+let currentIndex = 0;
+let score = 0;
+let selectedDifficulty = "easy";
+let isSuddenDeath = false;
+let wrongAnswers = [];
+let timerInterval = null;
+let secondsElapsed = 0;
+let isTimerEnabled = true;
 
-function setupRadioGroup(groupId, callback) {
-  const container = document.getElementById(groupId);
-  container.addEventListener("click", (e) => {
-    const btn = e.target.closest(".btn-radio");
-    if (!btn) return;
-    container.querySelectorAll(".btn-radio").forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
-    callback(btn.dataset.value);
-  });
+let timeAttackLimit = 0;
+let countdownInterval = null;
+let startTime = 0;
+
+let isHintEnabled = true;
+
+function normalizeNumber(str) {
+    const numMap = {
+        '①': '1', '②': '2', '③': '3', '④': '4', '⑤': '5',
+        '一': '1', '二': '2', '三': '3', '四': '4', '五': '5',
+        '１': '1', '２': '2', '３': '3', '４': '4', '５': '5'
+    };
+    return str.replace(/[①②③④⑤一二三四五１２３４５]/g, m => numMap[m] || m);
 }
 
-setupRadioGroup("optCategory", v => state.category = v);
-setupRadioGroup("optDiff", v => state.difficulty = v);
-setupRadioGroup("optHint", v => state.hintEnabled = (v === "on"));
-setupRadioGroup("optCount", v => state.totalQuestions = parseInt(v));
-
-function showScreen(name) {
-  Object.keys(screens).forEach(k => screens[k].classList.remove("active"));
-  screens[name].classList.add("active");
-}
-
-function normalizeInput(str) {
-  return str
-    .trim()
-    .replace(/[\u30a1-\u30f6]/g, match => String.fromCharCode(match.charCodeAt(0) - 0x60))
-    .replace(/[・\s ]/g, "");
-}
-
-document.getElementById("btnStart").addEventListener("click", () => {
-  let filtered = KANJI_DATABASE;
-  if (state.category !== "all") {
-    filtered = KANJI_DATABASE.filter(item => item.cat === state.category);
-  }
-
-  const shuffled = [...filtered].sort(() => Math.random() - 0.5);
-  state.questions = shuffled.slice(0, Math.min(state.totalQuestions, shuffled.length));
-  state.currentIndex = 0;
-  state.score = 0;
-  state.history = [];
-
-  document.getElementById("hudTotal").textContent = state.questions.length;
-  document.getElementById("hudDiff").textContent = state.difficulty === "easy" ? "かんたん" : "むずかしい";
-  document.getElementById("hudHintStatus").textContent = state.hintEnabled ? "ON" : "OFF";
-  
-  document.getElementById("btnHint").style.display = state.hintEnabled ? "block" : "none";
-
-  showScreen("play");
-  loadQuestion();
-});
-
-function loadQuestion() {
-  const current = state.questions[state.currentIndex];
-  document.getElementById("hudCurrent").textContent = state.currentIndex + 1;
-  document.getElementById("qKanji").textContent = current.kanji;
-  
-  const catNames = { monster: "モンスター", weapon: "武器", armor: "防具", item: "アイテム・素材" };
-  document.getElementById("qCategory").textContent = catNames[current.cat] || "クエスト";
-  
-  document.getElementById("qHint").textContent = "";
-  document.getElementById("answerInput").value = "";
-  document.getElementById("msgArea").textContent = "";
-  document.getElementById("answerInput").focus();
-}
-
-function checkAnswer(isGiveUp = false) {
-  const current = state.questions[state.currentIndex];
-  const inputRaw = document.getElementById("answerInput").value;
-  const inputNorm = normalizeInput(inputRaw);
-
-  const targetReadNorm = normalizeInput(current.read);
-  const targetKataNorm = current.katakana ? normalizeInput(current.katakana) : "";
-
-  let isCorrect = false;
-
-  if (!isGiveUp) {
-    if (state.difficulty === "easy") {
-      if (inputNorm === targetReadNorm || (targetKataNorm && inputNorm === targetKataNorm)) {
-        isCorrect = true;
-      }
-    } else {
-      if (inputNorm === targetReadNorm) {
-        isCorrect = true;
-      }
+function updateDesc() {
+    const diff = document.getElementById('difficulty').value;
+    const descBox = document.getElementById('mode-desc-text');
+    if (diff === "easy") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「伊藤」「いとう」「伊藤博文」などで正解";
+    } else if (diff === "hard") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「伊藤」「伊藤1」「いとう」などで正解（※1回目は「1」省略可）";
+    } else if (diff === "extreme") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>「第1代の内閣総理大臣は？」と出題。「伊藤博文」「伊藤博文1」などで正解（ヒント：歴史的背景）";
+    } else if (diff === "demon") {
+        descBox.innerHTML = "・第1代（伊藤博文の1回目就任）の例：<br>出来事から出題され、「伊藤博文」「伊藤博文1」などで正解（ヒント：第1代目）";
     }
-  }
+}
 
-  const msgArea = document.getElementById("msgArea");
-
-  if (isCorrect) {
-    snd.playCorrect();
-    msgArea.className = "msg-area msg-correct";
-    msgArea.textContent = "一本！ 正解！";
-    state.score++;
-  } else {
-    snd.playWrong();
-    msgArea.className = "msg-area msg-wrong";
-    let correctStr = current.read;
-    if (current.katakana) correctStr += `【${current.katakana}】`;
-    msgArea.textContent = isGiveUp ? `【正解: ${correctStr}】` : `不正解...【正解: ${correctStr}】`;
-  }
-
-  state.history.push({
-    kanji: current.kanji,
-    correctRead: current.read,
-    katakana: current.katakana,
-    isCorrect: isCorrect
-  });
-
-  setTimeout(() => {
-    state.currentIndex++;
-    if (state.currentIndex < state.questions.length) {
-      loadQuestion();
-    } else {
-      showResult();
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
-  }, 1600);
 }
 
-document.getElementById("btnSubmit").addEventListener("click", () => checkAnswer(false));
-document.getElementById("answerInput").addEventListener("keypress", (e) => {
-  if (e.key === "Enter") checkAnswer(false);
-});
-document.getElementById("btnGiveUp").addEventListener("click", () => checkAnswer(true));
-
-document.getElementById("btnHint").addEventListener("click", () => {
-  if (!state.hintEnabled) return;
-  const current = state.questions[state.currentIndex];
-  const firstChar = current.read.charAt(0);
-  document.getElementById("qHint").textContent = `ヒント: 最初の文字は「 ${firstChar} 」`;
-});
-
-function showResult() {
-  showScreen("result");
-  const total = state.questions.length;
-  const rate = Math.round((state.score / total) * 100);
-
-  document.getElementById("resCorrect").textContent = state.score;
-  document.getElementById("resTotal").textContent = total;
-  document.getElementById("resRate").textContent = rate;
-
-  let rank = "駆け出しハンター";
-  if (rate === 100) rank = "伝説のギルドマスター";
-  else if (rate >= 80) rank = "G級ハンター";
-  else if (rate >= 60) rank = "上位ハンター";
-  else if (rate >= 40) rank = "下位ハンター";
-  document.getElementById("resultRank").textContent = rank;
-
-  const listEl = document.getElementById("reviewList");
-  listEl.innerHTML = "";
-  state.history.forEach(item => {
-    const div = document.createElement("div");
-    div.className = "review-item";
-    const subName = item.katakana ? `【${item.katakana}】 ` : '';
-    div.innerHTML = `
-      <div class="item-info">
-        <div class="item-kanji">${item.kanji}</div>
-        <div class="item-sub">${subName}読み: ${item.correctRead}</div>
-      </div>
-      <span class="${item.isCorrect ? 'ok' : 'ng'}">${item.isCorrect ? '◯ 正解' : '✕ 不正解'}</span>
-    `;
-    listEl.appendChild(div);
-  });
+function startTimer() {
+    secondsElapsed = 0;
+    updateTimerDisplay();
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        secondsElapsed++;
+        updateTimerDisplay();
+    }, 1000);
 }
 
-document.getElementById("btnRestart").addEventListener("click", () => {
-  showScreen("setup");
-});
+function stopTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    if (countdownInterval) clearInterval(countdownInterval);
+}
 
-document.getElementById("btnSound").addEventListener("click", (e) => {
-  snd.muted = !snd.muted;
-  e.target.textContent = snd.muted ? "🔇" : "🔊";
-});
+function updateTimerDisplay() {
+    const mins = Math.floor(secondsElapsed / 60).toString().padStart(2, '0');
+    const secs = (secondsElapsed % 60).toString().padStart(2, '0');
+    document.getElementById('timer-box').innerText = `⏱ ${mins}:${secs}`;
+}
+
+function startGaugeCountdown() {
+    if (timeAttackLimit <= 0) return;
+    
+    const gaugeBox = document.getElementById('gauge-box');
+    const gaugeBar = document.getElementById('gauge-bar');
+    gaugeBox.classList.remove('hidden');
+    
+    gaugeBar.style.width = '100%';
+    gaugeBar.style.backgroundColor = '#28a745';
+    
+    startTime = Date.now();
+    const durationMs = timeAttackLimit * 1000;
+    
+    if (countdownInterval) clearInterval(countdownInterval);
+    
+    countdownInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const remainingRatio = Math.max(0, (durationMs - elapsed) / durationMs);
+        
+        gaugeBar.style.width = `${remainingRatio * 100}%`;
+        
+        if (remainingRatio <= 0.2) {
+            gaugeBar.style.backgroundColor = '#dc3545';
+        } else if (remainingRatio <= 0.5) {
+            gaugeBar.style.backgroundColor = '#ffc107';
+        }
+
+        if (remainingRatio <= 0) {
+            clearInterval(countdownInterval);
+            handleTimeUp();
+        }
+    }, 100);
+}
+
+function handleTimeUp() {
+    const q = questionPool[currentIndex];
+    document.getElementById('result-message').style.color = "#dc3545";
+    
+    let ansDisp = q.name;
+    if (selectedDifficulty !== "easy") {
+        ansDisp = q.times === 1 ? `${q.name}（または${q.name}1）` : `${q.name}${q.times}`;
+    }
+    document.getElementById('result-message').innerText = `⏰ 時間切れ... (正解: ${ansDisp})`;
+    
+    wrongAnswers.push({
+        number: q.number,
+        name: q.name,
+        kana: q.kana,
+        times: q.times,
+        userAns: "（時間切れ）"
+    });
+
+    if (isSuddenDeath) {
+        setTimeout(() => endGame(false), 1500);
+    } else {
+        currentIndex++;
+        setTimeout(showQuestion, 1200);
+    }
+}
+
+function toggleHint() {
+    const hintBox = document.getElementById('hint-box');
+    hintBox.classList.toggle('hidden');
+}
+
+function startGame() {
+    const start = parseInt(document.getElementById('start-num').value);
+    const end = parseInt(document.getElementById('end-num').value);
+    selectedDifficulty = document.getElementById('difficulty').value;
+    isSuddenDeath = document.getElementById('sudden-death-toggle').checked;
+    isTimerEnabled = document.getElementById('timer-toggle').checked;
+    timeAttackLimit = parseInt(document.getElementById('time-attack-select').value);
+    isHintEnabled = document.getElementById('hint-toggle').checked;
+
+    if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > 103) {
+        alert("正しい範囲を入力してください（1〜103）");
+        return;
+    }
+
+    questionPool = [];
+    for (let i = start; i <= end; i++) {
+        if (pmMasterData[i]) {
+            questionPool.push({ number: i, ...pmMasterData[i] });
+        }
+    }
+
+    if (questionPool.length === 0) {
+        alert("指定された範囲のデータが見つかりません");
+        return;
+    }
+
+    shuffle(questionPool);
+
+    currentIndex = 0;
+    score = 0;
+    wrongAnswers = [];
+
+    document.getElementById('wrong-summary').classList.add('hidden');
+    document.getElementById('wrong-ul').innerHTML = "";
+    document.getElementById('input-container').style.display = "block";
+    document.getElementById('setup-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('total-questions').innerText = questionPool.length;
+
+    if (isTimerEnabled) {
+        document.getElementById('timer-box').classList.remove('hidden');
+        startTimer();
+    } else {
+        document.getElementById('timer-box').classList.add('hidden');
+    }
+
+    let modeTitle = "";
+    if (selectedDifficulty === "demon") {
+        modeTitle = "【鬼ムズ】出来事から首相を推測（漢字フルネーム＋就任回数）";
+    } else if (selectedDifficulty === "extreme") {
+        modeTitle = "【激ムズ】第◯代から首相を推測（漢字フルネーム＋就任回数）";
+    } else if (selectedDifficulty === "hard") {
+        modeTitle = "【むずかしい】名前（＋就任回数）を入力（1回目は数字なし可）";
+    } else {
+        modeTitle = "【かんたん】漢字またはひらがな（フルネーム/苗字のみ可）で入力";
+    }
+    
+    if (isSuddenDeath) {
+        modeTitle += " ※サドンデス（1問ミスで終了）";
+    }
+    
+    document.getElementById('sub-hint').innerText = modeTitle;
+
+    showQuestion();
+}
+
+function showQuestion() {
+    if (currentIndex >= questionPool.length) {
+        endGame(true);
+        return;
+    }
+
+    const q = questionPool[currentIndex];
+
+    if (selectedDifficulty === "demon") {
+        document.getElementById('question').innerText = q.event;
+    } else {
+        document.getElementById('question').innerText = `第 ${q.number} 代の内閣総理大臣は？`;
+    }
+
+    const hintContainer = document.getElementById('hint-container');
+    const hintBox = document.getElementById('hint-box');
+    
+    if (isHintEnabled) {
+        hintContainer.classList.remove('hidden');
+        hintBox.classList.add('hidden');
+        
+        if (selectedDifficulty === "demon") {
+            document.getElementById('hint-text').innerText = `第 ${q.number} 代目の内閣総理大臣`;
+        } else {
+            document.getElementById('hint-text').innerText = q.event;
+        }
+    } else {
+        hintContainer.classList.add('hidden');
+    }
+
+    document.getElementById('answer-input').value = "";
+    document.getElementById('result-message').innerText = "";
+    document.getElementById('current-count').innerText = currentIndex + 1;
+    document.getElementById('score').innerText = score;
+    document.getElementById('answer-input').focus();
+
+    if (timeAttackLimit > 0) {
+        startGaugeCountdown();
+    } else {
+        document.getElementById('gauge-box').classList.add('hidden');
+    }
+}
+
+function checkAnswer() {
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    const rawInput = document.getElementById('answer-input').value.trim();
+    const q = questionPool[currentIndex];
+
+    if (!rawInput) return;
+
+    let isCorrect = false;
+
+    if (selectedDifficulty === "easy") {
+        let allowed = [q.name, q.kana];
+        if (q.aliases) allowed = allowed.concat(q.aliases);
+        if (q.times === 1) {
+            allowed = allowed.concat(allowed.map(item => `${item}1`));
+        }
+        isCorrect = allowed.includes(rawInput);
+    } else if (selectedDifficulty === "hard") {
+        const normalizedInput = normalizeNumber(rawInput);
+        const correctPatterns = [
+            `${q.name}${q.times}`,
+            `${q.kana}${q.times}`
+        ];
+        if (q.aliases) {
+            q.aliases.forEach(alias => correctPatterns.push(`${alias}${q.times}`));
+        }
+
+        if (q.times === 1) {
+            correctPatterns.push(q.name, q.kana);
+            if (q.aliases) {
+                q.aliases.forEach(alias => correctPatterns.push(alias));
+            }
+        }
+
+        isCorrect = correctPatterns.includes(normalizedInput);
+    } else if (selectedDifficulty === "extreme" || selectedDifficulty === "demon") {
+        const normalizedInput = normalizeNumber(rawInput);
+        let allowedNames = [q.name];
+        if (q.aliases) {
+            q.aliases.forEach(a => {
+                if (!/^[ぁ-ん]+$/.test(a) && a.length > 2) {
+                    allowedNames.push(a);
+                }
+            });
+        }
+        const extremeCorrectPatterns = allowedNames.map(n => `${n}${q.times}`);
+
+        if (q.times === 1) {
+            allowedNames.forEach(n => extremeCorrectPatterns.push(n));
+        }
+
+        isCorrect = extremeCorrectPatterns.includes(normalizedInput);
+    }
+
+    if (isCorrect) {
+        score++;
+        document.getElementById('result-message').style.color = "#28a745";
+        document.getElementById('result-message').innerText = "⭕ 正解！";
+        currentIndex++;
+        setTimeout(showQuestion, 1200);
+    } else {
+        document.getElementById('result-message').style.color = "#dc3545";
+        let ansDisp = q.name;
+        if (selectedDifficulty !== "easy") {
+            ansDisp = q.times === 1 ? `${q.name}（または${q.name}1）` : `${q.name}${q.times}`;
+        }
+        document.getElementById('result-message').innerText = `❌ 不正解... (正解: ${ansDisp})`;
+        wrongAnswers.push({
+            number: q.number,
+            name: q.name,
+            kana: q.kana,
+            times: q.times,
+            userAns: rawInput
+        });
+
+        if (isSuddenDeath) {
+            setTimeout(() => endGame(false), 1500);
+        } else {
+            currentIndex++;
+            setTimeout(showQuestion, 1200);
+        }
+    }
+}
+
+function endGame(isClear) {
+    stopTimer();
+    document.getElementById('input-container').style.display = "none";
+    document.getElementById('sub-hint').innerText = "";
+    document.getElementById('hint-container').classList.add('hidden');
+    document.getElementById('gauge-box').classList.add('hidden');
+
+    if (isClear) {
+        document.getElementById('question').innerText = "全問終了！お疲れ様でした！";
+    } else {
+        document.getElementById('question').innerText = "💀 ゲームオーバー！（サドンデス）";
+    }
+
+    let resultText = `最終結果: ${questionPool.length}問中 ${score}問正解！`;
+    if (isTimerEnabled) {
+        const mins = Math.floor(secondsElapsed / 60);
+        const secs = secondsElapsed % 60;
+        resultText += `\n⏱ クリアタイム: ${mins}分${secs}秒`;
+    }
+    document.getElementById('result-message').innerText = resultText;
+
+    if (wrongAnswers.length > 0) {
+        document.getElementById('wrong-summary').classList.remove('hidden');
+        const ul = document.getElementById('wrong-ul');
+        ul.innerHTML = "";
+        
+        wrongAnswers.sort((a, b) => a.number - b.number);
+        
+        wrongAnswers.forEach(item => {
+            const li = document.createElement('li');
+            let answerText = `${item.name}（${item.kana}）`;
+            if (selectedDifficulty === "hard" || selectedDifficulty === "extreme" || selectedDifficulty === "demon") {
+                answerText = item.times === 1 ? `${item.name}（または ${item.name}1）` : `${item.name}${item.times}`;
+            }
+            li.innerHTML = `<strong>第${item.number}代:</strong> 正解「${answerText}」 <span style="color:#718096; font-size:12px;">(あなたの入力: ${item.userAns})</span>`;
+            ul.appendChild(li);
+        });
+    } else if (isClear) {
+        document.getElementById('result-message').innerText += "\n🎉 全問正解です！素晴らしい！";
+    }
+}
+
+function resetGame() {
+    stopTimer();
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('setup-screen').classList.remove('hidden');
+}
 </script>
 </body>
 </html>
