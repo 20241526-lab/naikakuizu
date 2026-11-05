@@ -40,6 +40,19 @@
             background-color: #28a745;
             transition: width 0.1s linear, background-color 0.3s ease;
         }
+
+        /* 称号バッジ用スタイル */
+        .title-badge {
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
@@ -110,6 +123,7 @@
             <button onclick="checkAnswer()">回答</button>
         </div>
         <div id="result-message" class="result"></div>
+        <div id="title-container" class="hidden"></div>
         <p>進行状況: <span id="current-count">0</span> / <span id="total-questions">0</span> 題（正解: <span id="score">0</span>）</p>
 
         <div id="wrong-summary" class="wrong-list hidden">
@@ -243,6 +257,8 @@ let countdownInterval = null;
 let startTime = 0;
 
 let isHintEnabled = true;
+let currentStartNum = 1;
+let currentEndNum = 103;
 
 function normalizeNumber(str) {
     const numMap = {
@@ -361,21 +377,21 @@ function toggleHint() {
 }
 
 function startGame() {
-    const start = parseInt(document.getElementById('start-num').value);
-    const end = parseInt(document.getElementById('end-num').value);
+    currentStartNum = parseInt(document.getElementById('start-num').value);
+    currentEndNum = parseInt(document.getElementById('end-num').value);
     selectedDifficulty = document.getElementById('difficulty').value;
     isSuddenDeath = document.getElementById('sudden-death-toggle').checked;
     isTimerEnabled = document.getElementById('timer-toggle').checked;
     timeAttackLimit = parseInt(document.getElementById('time-attack-select').value);
     isHintEnabled = document.getElementById('hint-toggle').checked;
 
-    if (isNaN(start) || isNaN(end) || start > end || start < 1 || end > 103) {
+    if (isNaN(currentStartNum) || isNaN(currentEndNum) || currentStartNum > currentEndNum || currentStartNum < 1 || currentEndNum > 103) {
         alert("正しい範囲を入力してください（1〜103）");
         return;
     }
 
     questionPool = [];
-    for (let i = start; i <= end; i++) {
+    for (let i = currentStartNum; i <= currentEndNum; i++) {
         if (pmMasterData[i]) {
             questionPool.push({ number: i, ...pmMasterData[i] });
         }
@@ -392,6 +408,8 @@ function startGame() {
     score = 0;
     wrongAnswers = [];
 
+    document.getElementById('title-container').classList.add('hidden');
+    document.getElementById('title-container').innerHTML = "";
     document.getElementById('wrong-summary').classList.add('hidden');
     document.getElementById('wrong-ul').innerHTML = "";
     document.getElementById('input-container').style.display = "block";
@@ -573,6 +591,28 @@ function endGame(isClear) {
         resultText += `\n⏱ クリアタイム: ${mins}分${secs}秒`;
     }
     document.getElementById('result-message').innerText = resultText;
+
+    // 称号獲得チェック
+    const isPerfect = (score === questionPool.length) && (questionPool.length > 0);
+    let earnedTitle = "";
+
+    if (isPerfect) {
+        if (currentStartNum === 1 && currentEndNum >= 103) {
+            earnedTitle = "👑 称号【内閣王】を獲得！";
+        } else if (currentStartNum === 1 && currentEndNum >= 50) {
+            earnedTitle = "🌟 称号【内閣プロ】を獲得！";
+        } else if (currentStartNum === 1 && currentEndNum >= 25) {
+            earnedTitle = "🔰 称号【内閣ビギナー】を獲得！";
+        } else if (currentStartNum === 1 && currentEndNum >= 10) {
+            earnedTitle = "🌱 称号【内閣初心者】を獲得！";
+        }
+    }
+
+    if (earnedTitle) {
+        const titleBox = document.getElementById('title-container');
+        titleBox.innerHTML = `<div class="title-badge">${earnedTitle}</div>`;
+        titleBox.classList.remove('hidden');
+    }
 
     if (wrongAnswers.length > 0) {
         document.getElementById('wrong-summary').classList.remove('hidden');
